@@ -1,12 +1,13 @@
 import { generateSpeech } from 'ai'
 import { resolveGatewayProvider } from './_aiGateway.js'
+import { buildSpeechScript } from '../src/features/translation/speechScript.js'
 
 export const MAX_SPEECH_CHARACTERS = 1000
 
 const VARIANT_INSTRUCTIONS = {
-  lsc: 'Leggi con ritmo naturale e articolazione chiara. La lingua del testo è sarda.',
-  campidanese: 'Leggi con ritmo naturale e una cadenza campidanese prudente, senza caricature.',
-  logudorese: 'Leggi con ritmo naturale e una cadenza logudorese prudente, senza caricature.',
+  lsc: 'Il testo è una trascrizione fonetica in grafia italiana del sardo: leggilo alla lettera, senza correggere né tradurre le parole.',
+  campidanese: 'Il testo è una trascrizione fonetica in grafia italiana del campidanese: leggilo alla lettera, con cadenza prudente e senza caricature.',
+  logudorese: 'Il testo è una trascrizione fonetica in grafia italiana del logudorese: leggilo alla lettera, con cadenza prudente e senza caricature.',
 }
 
 export class SpeechError extends Error {
@@ -54,7 +55,7 @@ export const createSpeech = async (rawInput, env = process.env) => {
   try {
     const result = await generateSpeech({
       model: provider.speechModel(env.SPEECH_AI_MODEL || 'openai/tts-1'),
-      text: input.text,
+      text: input.language === 'srd' ? buildSpeechScript(input.text, input.variant) : input.text,
       voice: env.SPEECH_AI_VOICE || 'nova',
       outputFormat: 'mp3',
       speed: input.language === 'srd' ? 0.9 : 1,

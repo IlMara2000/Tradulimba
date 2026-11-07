@@ -25,6 +25,7 @@ import {
   loadTranslationHistory,
   saveTranslationHistory,
 } from './features/translation/history'
+import { buildSpeechScript } from './features/translation/speechScript.js'
 
 const loadNaraGame = () => import('./components/NaraGame')
 const NaraGame = lazy(loadNaraGame)
@@ -57,7 +58,10 @@ const browserSpeech = (text, language, variant, onEnd, onError) => {
   if (!('speechSynthesis' in window) || !('SpeechSynthesisUtterance' in window)) return null
 
   window.speechSynthesis.cancel()
-  const utterance = new SpeechSynthesisUtterance(text)
+  // La voce italiana resta quella disponibile, ma legge una trascrizione
+  // fonetica: i grafemi sardi non arrivano più al motore con le regole italiane.
+  const spoken = language === 'srd' ? buildSpeechScript(text, variant) : text
+  const utterance = new SpeechSynthesisUtterance(spoken)
   utterance.lang = 'it-IT'
   utterance.rate = language === 'srd' ? 0.86 : 0.94
   utterance.pitch = variant === 'campidanese' ? 1.03 : 0.98
@@ -415,12 +419,12 @@ function App() {
       utteranceRef.current = utterance
       setAudioStatus('playing')
       setAudioNotice(reason || (spokenLanguage === 'srd'
-        ? 'Voce del dispositivo attiva: la pronuncia sarda è solo indicativa.'
+        ? 'Voce del dispositivo attiva: la trascrizione fonetica approssima la pronuncia sarda.'
         : 'Voce italiana del dispositivo attiva.'))
     }
 
     if (spokenText.length > MAX_SPEECH_CHARACTERS) {
-      playDeviceVoice(`Per testi oltre ${MAX_SPEECH_CHARACTERS.toLocaleString('it-IT')} caratteri uso la voce del dispositivo; la pronuncia sarda resta indicativa.`)
+      playDeviceVoice(`Per testi oltre ${MAX_SPEECH_CHARACTERS.toLocaleString('it-IT')} caratteri uso la voce del dispositivo${spokenLanguage === 'srd' ? ', con la trascrizione fonetica che approssima la pronuncia sarda' : ''}.`)
       return
     }
 
@@ -458,9 +462,9 @@ function App() {
       await audio.play()
       setAudioStatus('playing')
       if (Array.isArray(data.warnings) && data.warnings.length > 0) {
-        setAudioNotice('Audio generato, con resa della pronuncia indicativa segnalata dal servizio vocale.')
+        setAudioNotice('Audio generato da una trascrizione fonetica: la resa resta approssimata.')
       } else if (spokenLanguage === 'srd') {
-        setAudioNotice('Audio assistito: la pronuncia può variare da paese a paese.')
+        setAudioNotice('Audio assistito da una trascrizione fonetica: la pronuncia può variare da paese a paese.')
       }
     } catch (speechError) {
       if (speechError.name === 'AbortError' || controller.signal.aborted) return
@@ -468,7 +472,7 @@ function App() {
       audioRef.current = null
       failedAudio?.pause()
       playDeviceVoice(spokenLanguage === 'srd'
-        ? 'Il servizio vocale assistito non è disponibile: uso la voce del dispositivo, con pronuncia sarda indicativa.'
+        ? 'Il servizio vocale assistito non è disponibile: uso la voce del dispositivo con la trascrizione fonetica sarda.'
         : 'Il servizio vocale assistito non è disponibile: uso la voce italiana del dispositivo.')
     } finally {
       if (speechRequestRef.current === controller) speechRequestRef.current = null
@@ -828,7 +832,7 @@ function App() {
               <span className="principle-number">03</span>
               <AudioLines size={24} />
               <h3>Voce assistita</h3>
-              <p>L’audio offre un riferimento d’ascolto, ma non sostituisce la pronuncia di un parlante nativo.</p>
+              <p>L’audio parte da una trascrizione fonetica: offre un riferimento d’ascolto, ma non sostituisce la pronuncia di un parlante nativo.</p>
             </article>
           </div>
         </section>
