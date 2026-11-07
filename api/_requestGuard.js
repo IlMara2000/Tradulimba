@@ -11,9 +11,20 @@ export class ApiRequestError extends Error {
   }
 }
 
+// Con un contatore condiviso l'identità del client conta: la prima voce di
+// x-forwarded-for è scritta dal client e sarebbe falsificabile (basterebbe
+// cambiarla per aggirare il limite). Si preferisce x-real-ip, altrimenti
+// l'ultima voce di x-forwarded-for, cioè quella aggiunta dal proxy più vicino.
 export const getClientId = (request) => {
+  const realIp = request.headers['x-real-ip']
+  if (typeof realIp === 'string' && realIp.trim()) return realIp.trim()
+
   const forwarded = request.headers['x-forwarded-for']
-  if (typeof forwarded === 'string') return forwarded.split(',')[0].trim()
+  if (typeof forwarded === 'string') {
+    const hops = forwarded.split(',').map((hop) => hop.trim()).filter(Boolean)
+    if (hops.length > 0) return hops[hops.length - 1]
+  }
+
   return request.socket?.remoteAddress || 'anonymous'
 }
 

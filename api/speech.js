@@ -1,16 +1,20 @@
 import { createSpeech, normalizeSpeechInput, SpeechError } from './_speech.js'
 import {
   ApiRequestError,
-  createRateLimiter,
   getClientId,
   getRequestId,
   setApiHeaders,
   validateJsonRequest,
 } from './_requestGuard.js'
+import { createSharedRateLimiter } from './_rateLimit.js'
 
 const RATE_WINDOW_MS = 60_000
 const RATE_LIMIT = 12
-const rateLimiter = createRateLimiter({ limit: RATE_LIMIT, windowMs: RATE_WINDOW_MS })
+const rateLimiter = createSharedRateLimiter({
+  limit: RATE_LIMIT,
+  windowMs: RATE_WINDOW_MS,
+  prefix: 'tradulimba:rl:speech',
+})
 
 export default async function handler(request, response) {
   const requestId = getRequestId(request)
@@ -24,7 +28,7 @@ export default async function handler(request, response) {
   try {
     validateJsonRequest(request)
     const input = normalizeSpeechInput(request.body || {})
-    const rateLimit = rateLimiter.consume(getClientId(request))
+    const rateLimit = await rateLimiter.consume(getClientId(request))
     setApiHeaders(response, { ...rateLimit, limit: RATE_LIMIT }, requestId)
     if (rateLimit.limited) {
       response.setHeader('Retry-After', String(Math.max(1, Math.ceil((rateLimit.resetAt - Date.now()) / 1000))))

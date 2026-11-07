@@ -47,4 +47,15 @@ Il [copione completo](docs/copione-registrazione-voce.md) divide la registrazion
 - `POST /api/translate` — massimo 4.000 caratteri
 - `POST /api/speech` — massimo 1.000 caratteri
 
-Entrambe le route validano l'input, non salvano i testi e applicano un limite leggero per istanza. Prima di un traffico elevato va aggiunto un rate limit distribuito.
+Entrambe le route validano l'input, non salvano i testi e applicano un limite per client: 40 traduzioni e 12 sintesi vocali al minuto.
+
+Il limite è condiviso tra le istanze serverless tramite un Redis raggiungibile via HTTPS (protocollo REST di Upstash, lo stesso usato da Vercel KV). Basta impostare una delle due coppie:
+
+- `UPSTASH_REDIS_REST_URL` + `UPSTASH_REDIS_REST_TOKEN`
+- `KV_REST_API_URL` + `KV_REST_API_TOKEN` (integrazione Vercel KV)
+
+L'incremento e la scadenza della finestra avvengono in un unico script Lua, quindi due istanze concorrenti non possono creare due finestre per lo stesso client. La chiave contiene l'hash dell'indirizzo IP, non l'indirizzo in chiaro, e `/api/translate` e `/api/speech` hanno contatori separati.
+
+Senza queste variabili lo script usa il contatore in memoria: corretto in locale, insufficiente in produzione perché ogni istanza conterebbe per sé. Se Redis non risponde la richiesta non viene rifiutata (fail-open): il limite torna locale per quell'istanza e nei log compare un solo evento `rate_limit_store_unavailable`, così un disservizio dello store non blocca il traduttore.
+
+La risposta di `/api/translate` include `glossary`: i termini di `src/features/translation/glossary.js` presenti nel testo, con la forma preferita in LSC e l'eventuale nota. Le voci vengono dalle forme già verificate del percorso NARA; per campidanese e logudorese sono passate al post-editor come vincolo, mentre in LSC restano un riferimento visibile nell'interfaccia. Il glossario non riscrive il testo da solo: senza vedere la frase, una sostituzione produrrebbe errori di accordo.
