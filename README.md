@@ -14,7 +14,9 @@ Il design usa un neomorfismo minimale con una palette ispirata ai colori della S
 
 La traduzione di base usa la coppia open source [`apertium-srd-ita`](https://github.com/apertium/apertium-srd-ita) attraverso l'API pubblica Apertium. Le varianti campidanese e logudorese possono essere rifinite da un modello AI tramite Vercel AI Gateway; se il servizio AI non è configurato, l'app restituisce la forma standard e lo dichiara nell'interfaccia.
 
-La funzione vocale prova Vercel AI Gateway e, se non disponibile, usa la sintesi vocale italiana del dispositivo come fallback. Nessuna delle due soluzioni garantisce una pronuncia sarda nativa.
+La funzione vocale prova Vercel AI Gateway e, se non disponibile, usa la sintesi vocale italiana del dispositivo come fallback. In entrambi i casi il testo sardo non arriva al motore così com'è: `src/features/translation/speechScript.js` lo riscrive in grafia italiana per la sola sintesi vocale, lasciando invariato il testo mostrato a schermo. La `tz` diventa `zz` ([ts]), la `s` intervocalica raddoppia per restare sorda, la `j` diventa `i`, `lli` e `nni` seguono la grafia italiana e, in campidanese, la `d` intervocalica passa a `r` e la `x` prende il valore della scrittura locale.
+
+La trascrizione avvicina i suoni ma non li riproduce: una voce italiana non rende le retroflesse di `sedda` e `ando`, le leni [β]/[ð], l'apertura vocalica che la LSC non segna né le assimilazioni di frase (`sas domos` → `sar domos`). L'audio resta un riferimento d'ascolto e non sostituisce un parlante nativo.
 
 La dicitura “release stabile” riguarda affidabilità e completezza dell'applicazione, non costituisce una certificazione linguistica. Gli adattamenti di varietà e la pronuncia vanno verificati con parlanti competenti prima di usi editoriali, didattici o istituzionali.
 
