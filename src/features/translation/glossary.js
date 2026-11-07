@@ -1,67 +1,14 @@
 // Glossario di termini verificati, condiviso tra client e API: le voci vengono
-// dal percorso NARA (forme LSC con note) e servono a due scopi — fissare le
-// forme preferite nel post-editor AI e mostrare all'utente quali termini noti
-// compaiono nella traduzione. Nessuna riscrittura automatica: cambiare una
-// parola senza vedere la frase produrrebbe errori di accordo.
+// dal percorso NARA (forme LSC con la loro provenienza) e servono a due scopi —
+// fissare le forme preferite nel post-editor AI e mostrare all'utente quali
+// termini noti compaiono nella traduzione. Nessuna riscrittura automatica:
+// cambiare una parola senza vedere la frase produrrebbe errori di accordo.
+// I dati stanno in glossaryData.js, con la lezione e la domanda NARA che
+// attestano ogni forma; qui resta solo la ricerca nel testo.
 
-export const GLOSSARY_REFERENCE = 'Norma LSC · corso NARA'
+import { GLOSSARY_ENTRIES } from './glossaryData.js'
 
-export const GLOSSARY_ENTRIES = [
-  { it: 'ciao', srd: 'salude', note: 'Saluto generale; nel parlato esistono forme locali.' },
-  { it: 'buongiorno', srd: 'bona die', note: 'Die significa “giorno”.' },
-  { it: 'buonasera', srd: 'bona sera' },
-  { it: 'buonanotte', srd: 'bona note' },
-  { it: 'grazie', srd: 'gràtzias', note: 'Per ringraziare con più enfasi: gràtzias meda.' },
-  { it: 'grazie mille', srd: 'gràtzias meda', note: 'Forma enfatica: meda vale “molto”.' },
-  { it: 'per favore', srd: 'pro praghere', note: 'De nudda significa invece “di niente”.' },
-  { it: 'di niente', srd: 'de nudda', note: 'Risposta a un ringraziamento.' },
-  { it: 'io sono', srd: 'deo so', note: 'Deo significa “io”, so significa “sono”.' },
-  { it: 'io ho', srd: 'deo apo', note: 'Presente di àere: deo apo, tue as, issu/issa at.' },
-  { it: 'tu sei', srd: 'tue ses', note: 'Presente di èssere: deo so, tue ses, issu/issa est.' },
-  { it: 'come ti chiami', srd: 'ite ti naras', note: 'Forma LSC con nàrrere; nel parlato circolano domande locali diverse.' },
-  { it: 'mi chiamo', srd: 'mi naro', note: 'Naro è la prima persona presente di nàrrere.' },
-  { it: 'che cosa', srd: 'ite', note: 'Ite introduce le domande; nella scrittura LSC le parole restano intere.' },
-  { it: 'che ora è', srd: 'ite ora est', note: 'Si scrive ite ora, non it’ora.' },
-  { it: 'sono le tre', srd: 'sunt sas tres', note: 'Sunt sas tres significa “sono le tre”.' },
-  { it: 'vuoi', srd: 'boles', note: 'Seconda persona: ite boles a mandigare? = che cosa vuoi mangiare?' },
-  { it: 'dove', srd: 'in ue', note: 'In ue introduce una domanda di luogo: in ue est su bagnu?' },
-  { it: 'qui', srd: 'inoghe', note: 'In cue indica invece “lì / là”.' },
-  { it: 'accanto alla piazza', srd: 'acanta de sa pratza', note: 'Acanta de introduce la vicinanza.' },
-  { it: 'acqua', srd: 'abba', note: 'Può indicare anche la pioggia, secondo il contesto.' },
-  { it: 'pane', srd: 'pane' },
-  { it: 'vino', srd: 'binu' },
-  { it: 'formaggio', srd: 'casu' },
-  { it: 'carne', srd: 'petza' },
-  { it: 'pesce', srd: 'pische' },
-  { it: 'casa', srd: 'domo', note: 'Plurale domos; domo è femminile.' },
-  { it: 'cucina', srd: 'coghina' },
-  { it: 'cucinare', srd: 'coghinare', note: 'Coghina è la cucina; coghinare è l’azione.' },
-  { it: 'bagno', srd: 'bagnu' },
-  { it: 'tavolo', srd: 'mesa' },
-  { it: 'sedia', srd: 'cadrea' },
-  { it: 'madre', srd: 'mama' },
-  { it: 'padre', srd: 'babbu' },
-  { it: 'figlio', srd: 'fìgiu' },
-  { it: 'figlia', srd: 'fìgia' },
-  { it: 'fratello', srd: 'frade', note: 'Plurale frades.' },
-  { it: 'sorella', srd: 'sorre', note: 'Plurale sorres.' },
-  { it: 'oggi', srd: 'oe' },
-  { it: 'ieri', srd: 'eris' },
-  { it: 'domani', srd: 'cras' },
-  { it: 'mattina', srd: 'mangianu', note: 'Di mattina: a mangianu.' },
-  { it: 'pomeriggio', srd: 'merie', note: 'Di pomeriggio: a merie.' },
-  { it: 'sera', srd: 'sero', note: 'Di sera: a sero. Bona sera è il saluto.' },
-  { it: 'piazza', srd: 'pratza' },
-  { it: 'sinistra', srd: 'manca', note: 'A sinistra: a manca.' },
-  { it: 'destra', srd: 'dereta', note: 'A destra: a dereta.' },
-  { it: 'mangiare', srd: 'mandigare' },
-  { it: 'parlare', srd: 'faeddare' },
-  { it: 'essere', srd: 'èssere', note: 'Gli accenti distinguono gli infiniti LSC.' },
-  { it: 'avere', srd: 'àere', note: 'Gli accenti distinguono gli infiniti LSC.' },
-  { it: 'abitare', srd: 'bìvere', note: 'Bìvere vale anche “vivere”: bivo in Nùgoro.' },
-  { it: 'libro', srd: 'libru' },
-  { it: 'sardo', srd: 'sardu', note: 'Maschile con articolo su: su sardu.' },
-]
+export { GLOSSARY_ENTRIES, GLOSSARY_REFERENCE } from './glossaryData.js'
 
 export const MAX_GLOSSARY_HITS = 4
 
