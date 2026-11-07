@@ -658,6 +658,68 @@ main { position: relative; }
   background: rgba(75, 119, 33, 0.08);
 }
 
+.glossary-hits {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 7px 10px;
+  margin: 0 20px 18px;
+  border: 1px solid rgba(75, 119, 33, 0.16);
+  border-radius: 14px;
+  padding: 10px 12px;
+  background: rgba(75, 119, 33, 0.06);
+  font-size: 11px;
+}
+
+.glossary-hits__label {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  color: #355718;
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 0.09em;
+  text-transform: uppercase;
+}
+
+.glossary-hits ul {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.glossary-hits li {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  border-radius: 999px;
+  padding: 5px 10px;
+  color: var(--ink-soft);
+  background: var(--surface-light);
+  box-shadow: var(--raised-small);
+}
+
+.glossary-hits li strong {
+  color: var(--green);
+  font-weight: 700;
+}
+
+.glossary-hits li.is-missing {
+  background: rgba(198, 71, 23, 0.08);
+}
+
+.glossary-hits li.is-missing strong {
+  color: var(--earth);
+}
+
+.glossary-hits li svg {
+  color: var(--ink-soft);
+  opacity: 0.65;
+}
+
 .translate-row {
   display: flex;
   align-items: center;

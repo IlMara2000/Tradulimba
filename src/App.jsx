@@ -146,6 +146,18 @@ function App() {
     return target === 'srd' ? effectiveVariant.short : `Da ${effectiveVariant.short}`
   }, [output, resultMeta, target, variant])
 
+  // Un termine del glossario può non comparire nel risultato: la forma
+  // preferita resta visibile come divergenza da verificare.
+  const glossaryHits = useMemo(() => {
+    const hits = resultMeta?.glossary
+    if (!Array.isArray(hits) || !output) return []
+    const haystack = output.toLocaleLowerCase('it')
+    return hits.map((item) => ({
+      ...item,
+      applied: haystack.includes(item.translation.toLocaleLowerCase('it')),
+    }))
+  }, [output, resultMeta])
+
   const cancelTranslation = useCallback(() => {
     requestSequenceRef.current += 1
     requestRef.current?.abort()
@@ -272,6 +284,14 @@ function App() {
       const variantApplied = data.variantApplied !== false
       const effectiveVariant = variantApplied ? activeVariant : 'lsc'
       const warning = typeof data.warning === 'string' ? data.warning : ''
+      const glossary = (Array.isArray(data.glossary) ? data.glossary : [])
+        .slice(0, 4)
+        .map((item) => ({
+          term: typeof item?.term === 'string' ? item.term.trim() : '',
+          translation: typeof item?.translation === 'string' ? item.translation.trim() : '',
+          note: typeof item?.note === 'string' ? item.note.trim() : '',
+        }))
+        .filter((item) => item.term && item.translation)
 
       setOutput(translatedText)
       setStatus('success')
@@ -281,6 +301,7 @@ function App() {
         effectiveVariant,
         variantApplied,
         engine: typeof data.engine === 'string' ? data.engine : '',
+        glossary,
       })
       addToHistory({
         id: `${Date.now()}-${Math.random().toString(36).slice(2, 7)}`,
@@ -689,6 +710,26 @@ function App() {
                     <span className="voice-tag">assistita</span>
                   </button>
                 </div>
+                {!isLoading && glossaryHits.length > 0 && (
+                  <div className="glossary-hits" aria-label="Termini del glossario presenti nel testo">
+                    <span className="glossary-hits__label"><BookOpenText size={15} /> Glossario</span>
+                    <ul>
+                      {glossaryHits.map((item) => (
+                        <li
+                          key={`${item.term}-${item.translation}`}
+                          className={item.applied ? 'is-applied' : 'is-missing'}
+                          title={item.applied
+                            ? (item.note || 'Forma del glossario presente nel risultato.')
+                            : 'La forma del glossario non compare nel risultato: verificala con un parlante.'}
+                        >
+                          <span lang={source === 'srd' ? 'sc' : 'it'}>{item.term}</span>
+                          <ArrowRightLeft size={11} aria-hidden="true" />
+                          <strong lang={source === 'srd' ? 'it' : 'sc'}>{item.translation}</strong>
+                        </li>
+                      ))}
+                    </ul>
+                  </div>
+                )}
               </section>
             </div>
 
