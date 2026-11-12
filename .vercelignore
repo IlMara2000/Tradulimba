@@ -5,8 +5,9 @@ gh_2.96.0_*
 node_modules
 dist
 
-# Never upload local environment or database backup files.
+# Never upload local environment, access tokens or database backup files.
 .env*
+.corvoc-token
 *.backup
 *.backup.gz
 

@@ -5,33 +5,43 @@
     "description": "Traduttore pubblico italiano-sardo con varianti LSC, campidanese e logudorese.",
     "type": "module",
     "scripts": {
-      "dev": "vite",
-      "build": "vite build",
-      "lint": "eslint . --max-warnings=0",
-      "lint:fix": "eslint . --fix",
-      "test": "node --test tests/*.node.test.js",
-      "typecheck": "tsc -p ./jsconfig.json",
-      "preview": "vite preview"
+        "dev": "vite",
+        "build": "vite build && node scripts/copy-online-studio.mjs",
+        "lint": "eslint . --max-warnings=0",
+        "lint:fix": "eslint . --fix",
+        "test": "node --test tests/*.node.test.js",
+        "test:e2e": "node --test tests/voiceE2E.node.test.js",
+        "typecheck": "tsc -p ./jsconfig.json",
+        "preview": "vite preview",
+        "voice:setup": "node scripts/voice-setup.mjs",
+        "voice:corpus": "node scripts/voice-corpus.mjs",
+        "voice:synth": "node scripts/voice-corpus.mjs --synth",
+        "voice:check": "node scripts/voice-corpus.mjs --check",
+        "voice:list": "node scripts/voice-corpus.mjs --list",
+        "voice:server": "node scripts/voice-server.mjs",
+        "voice:record": "node scripts/voice-recorder.mjs",
+        "voice:report": "node scripts/voice-report.mjs"
     },
     "dependencies": {
-      "@ai-sdk/gateway": "^4.0.74",
-      "ai": "^7.0.92",
-      "lucide-react": "^1.41.0",
-      "react": "^19.2.8",
-      "react-dom": "^19.2.8"
+        "@ai-sdk/gateway": "^4.0.74",
+        "@vercel/blob": "^2.9.0",
+        "ai": "^7.0.92",
+        "lucide-react": "^1.41.0",
+        "react": "^19.2.8",
+        "react-dom": "^19.2.8"
     },
     "devDependencies": {
-      "@eslint/js": "^9.39.5",
-      "@types/node": "^26.4.1",
-      "@types/react": "^19.2.18",
-      "@types/react-dom": "^19.2.7",
-      "@vitejs/plugin-react": "^6.1.1",
-      "eslint": "^9.39.5",
-      "eslint-plugin-react": "^7.37.5",
-      "eslint-plugin-react-hooks": "^7.1.1",
-      "eslint-plugin-unused-imports": "^4.4.1",
-      "globals": "^17.12.0",
-      "typescript": "^7.0.2",
-      "vite": "^8.2.2"
+        "@eslint/js": "^9.39.5",
+        "@types/node": "^26.4.1",
+        "@types/react": "^19.2.18",
+        "@types/react-dom": "^19.2.7",
+        "@vitejs/plugin-react": "^6.1.1",
+        "eslint": "^9.39.5",
+        "eslint-plugin-react": "^7.37.5",
+        "eslint-plugin-react-hooks": "^7.1.1",
+        "eslint-plugin-unused-imports": "^4.4.1",
+        "globals": "^17.12.0",
+        "typescript": "^7.0.2",
+        "vite": "^8.2.2"
     }
-  }
+}

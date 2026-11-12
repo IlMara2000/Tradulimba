@@ -6,6 +6,8 @@ La **Limba Sarda Comuna è soprattutto una norma scritta**, non un unico accento
 
 Prima della registrazione definitiva fai controllare il testo sardo da un parlante madrelingua della tua zona e, per la LSC, da una persona competente nella norma scritta.
 
+Per il corpus di ascolto dell'app non serve rinominare i file: usa lo studio `npm run voice:record`, che salva ogni riga con l'`id` del copione e aggiorna il manifest. Lo studio richiede anche un nome o codice del parlante e un riferimento al consenso, li salva in `voice/registrazioni.json` e li riporta nel manifest pubblico e nella nota di ascolto. Non incollare il documento di consenso: usa un codice di protocollo. Lo studio controlla inoltre durata, silenzio iniziale e finale, rumore di fondo, rapporto voce/rumore e clipping prima del salvataggio. Per pianificare le sessioni, `npm run voice:report` esporta le righe mancanti divise per gruppo con i tempi stimati. I nomi `TL_DM01_...` descritti qui servono se in futuro registri un dataset separato per addestrare un modello vocale.
+
 ## Preparazione
 
 - Registra in una stanza silenziosa, senza riverbero, ventilatori, musica o notifiche.
@@ -70,6 +72,37 @@ mascru, bespe, fossa, festa, pedra
 prànghere, ungra, limba, sàmbene
 ghennàrgiu, Sardigna
 ```
+
+## Fase 1B — coppie di parole, accento e suoni difficili
+
+Queste righe servono a insegnare al corpus le distinzioni che una voce italiana
+non rende. Pronuncia ogni coppia due volte, prima isolata e poi dentro una frase.
+Non forzare la retroflessione se la tua parlata non la usa: registra la tua
+realizzazione reale e annotala nel foglio di trascrizione.
+
+```text
+manu [ˈmanu] / mannu [ˈmannu]
+caru [ˈkaru] / carru [ˈkarru]
+bella [ˈbɛlla] / bellu [ˈbellu]
+sedda [ˈseɖɖa] / seta [ˈseta]
+fìgiu [ˈfidʒu] / fizu [ˈfidzu]
+màllia [ˈmaʎʎa] / malia [maˈlia]
+```
+
+Frasi per il sandhi e l’accento di frase:
+
+```text
+Sas domos sunt mannas. — [sar ˈdɔmos sunt ˈmannas]
+Su bentu est fretu. — [su ˈentu est ˈfretu]
+Sa domo est abertu. — [sa ˈðɔmo est aˈbertu]
+Deo so inoghe, tue ses in cue.
+Non b’est perunu problema.
+```
+
+L’analizzatore della sezione **Sa limba** mostra IPA, sillabe e tonica delle
+parole che scrivi: usalo per controllare la trascrizione del copione prima
+della registrazione definitiva. Le trascrizioni qui sopra sono larghe e
+orientative, non una norma di pronuncia.
 
 ## Fase 2 — frasi naturali in LSC
 
@@ -211,6 +244,29 @@ Registra 2–3 minuti per argomento. In seguito il materiale andrà diviso in se
 - Racconta un episodio divertente.
 - Spiega il significato di cinque parole sarde.
 - Leggi una traduzione e poi ripetila in modo più naturale.
+
+## Come entra nel corpus
+
+Il copione operativo è `voice/copione.json`; l'elenco delle righe con i relativi
+id si ottiene con:
+
+```sh
+npm run voice:list
+```
+
+Ogni riga ha un id stabile (slug più un breve hash). Salva la registrazione in
+`public/voce/registrata/<id>.wav` — vanno bene anche `.mp3`, `.ogg`, `.m4a` e
+`.opus` — poi ricostruisci il manifest:
+
+```sh
+npm run voice:corpus
+```
+
+La registrazione umana ha priorità sulla clip sintetica dello stesso testo. Le
+righe elencate in `excludeSynthesis` (`màllia`, `campànnia`) non vengono
+generate con eSpeak perché quella voce non rende [ʎ]: sono tra le prime da
+registrare. `npm run voice:check` mostra cosa manca. Il contratto del corpus e
+del motore è in [`voce-sarda.md`](voce-sarda.md).
 
 ## Controllo finale
 

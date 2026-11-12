@@ -1,7 +1,8 @@
 import react from '@vitejs/plugin-react'
+import { existsSync } from 'node:fs'
 import path from 'node:path'
 import { defineConfig, loadEnv } from 'vite'
-import { createSpeech, SpeechError } from './api/_speech.js'
+import { createVoice, VoiceError } from './api/_voice.js'
 import { translateText, TranslatorError } from './api/_translator.js'
 
 const BODY_LIMIT_BYTES = 48 * 1024
@@ -44,9 +45,22 @@ const methodGuard = (request, response) => {
   return true
 }
 
+// In sviluppo, se il motore eSpeak NG con voce sarda è stato compilato in
+// .cache, l'app lo usa senza configurare nulla. In produzione il binario non
+// esiste: lì serve SARDINIAN_TTS_URL, come spiega docs/voce-sarda.md.
+const withLocalVoice = (env) => {
+  if (env.SARDINIAN_TTS_URL || env.SARDINIAN_ESPEAK_BIN) return env
+  const bin = path.resolve(process.cwd(), '.cache/espeak-ng/build/src/espeak-ng')
+  const data = path.resolve(process.cwd(), '.cache/espeak-ng/build/espeak-ng-data')
+  if (!existsSync(bin) || !existsSync(data)) return env
+  return { ...env, SARDINIAN_ESPEAK_BIN: bin, SARDINIAN_ESPEAK_DATA: data }
+}
+
 const translatorDevApi = (env) => ({
   name: 'tradulimba-local-api',
   configureServer(server) {
+    const voiceEnv = withLocalVoice(env)
+
     server.middlewares.use('/api/translate', async (request, response) => {
       if (methodGuard(request, response)) return
 
@@ -61,19 +75,22 @@ const translatorDevApi = (env) => ({
       }
     })
 
-    server.middlewares.use('/api/speech', async (request, response) => {
+    const voiceHandler = async (request, response) => {
       if (methodGuard(request, response)) return
 
       try {
         const input = await readRequestBody(request)
-        sendJson(response, 200, await createSpeech(input, env))
+        sendJson(response, 200, await createVoice(input, voiceEnv))
       } catch (error) {
-        sendJson(response, error instanceof SpeechError ? error.statusCode : error.statusCode || 500, {
+        sendJson(response, error instanceof VoiceError ? error.statusCode : error.statusCode || 500, {
           error: error.message || 'Errore durante la generazione della voce.',
           code: error.code || 'INTERNAL_ERROR',
         })
       }
-    })
+    }
+
+    server.middlewares.use('/api/voice', voiceHandler)
+    server.middlewares.use('/api/speech', voiceHandler)
   },
 })
 

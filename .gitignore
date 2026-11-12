@@ -17,6 +17,7 @@ node_modules
 dist
 dist-ssr
 *.local
+.cache
 
 # Editor directories and files
 .vscode/*
@@ -30,6 +31,7 @@ dist-ssr
 *.sw?
 
 .env
+.corvoc-token
 .vite
 .vercel
 supabase/.temp
@@ -37,3 +39,4 @@ supabase/.temp
 
 # Local GitHub CLI installers
 gh_2.96.0_*
+.env*

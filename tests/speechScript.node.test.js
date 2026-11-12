@@ -41,6 +41,26 @@ test('la x segue la convenzione della varietà', () => {
   assert.equal(buildSpeechScript('mataxa', 'lsc'), 'matassa')
 })
 
+test('in campidanese le finali -o/-e si avvicinano al parlato -u/-i', () => {
+  assert.equal(buildSpeechScript('domo', 'campidanese'), 'domu')
+  assert.equal(buildSpeechScript('pane e binu', 'campidanese'), 'pani e binu')
+  assert.equal(buildSpeechScript('domos e canes', 'campidanese'), 'domus e canis')
+  assert.equal(buildSpeechScript('bona die', 'campidanese'), 'bona die')
+  assert.equal(buildSpeechScript('domo', 'lsc'), 'domo')
+})
+
+test('gi e z restano intatti: [dʒ] è una realizzazione attestata, [dz] non è raggiungibile', () => {
+  for (const variant of ['lsc', 'campidanese', 'logudorese']) {
+    assert.equal(buildSpeechScript('su fìgiu', variant), 'su fìgiu')
+    assert.equal(buildSpeechScript('sa bìngia', variant), 'sa bìngia')
+    assert.equal(buildSpeechScript('su fizu ghennarzu', variant), 'su fizu ghennarzu')
+    assert.equal(
+      buildSpeechScript('organizare', variant),
+      variant === 'campidanese' ? 'organizari' : 'organizare',
+    )
+  }
+})
+
 test('il testo italiano, le maiuscole e la punteggiatura restano leggibili', () => {
   assert.equal(buildSpeechScript('Ciao, come stai?', 'lsc'), 'Ciao, come stai?')
   assert.equal(buildSpeechScript('Petza e binu!', 'lsc'), 'Pezza e binu!')

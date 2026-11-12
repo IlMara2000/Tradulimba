@@ -1,0 +1,157 @@
+<!doctype html>
+<html lang="it">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>TraduLimba · Corvoc / Rec</title>
+    <meta name="robots" content="noindex">
+    <link rel="stylesheet" href="/corvoc/rec/style.css">
+  </head>
+  <body data-corvoc="online">
+    <header class="top">
+      <div>
+        <p class="eyebrow">TraduLimba · corvoc</p>
+        <h1>Corvoc / Rec</h1>
+        <p class="lead">
+          Registra una riga alla volta. La ripresa viene controllata, caricata
+          nell’archivio online e associata all’id della riga: la voce umana
+          sostituisce la clip sintetica nel traduttore.
+        </p>
+      </div>
+      <div class="progress" aria-label="Avanzamento delle registrazioni">
+        <strong id="count">0 / 0</strong>
+        <span>registrate</span>
+        <div class="bar"><i id="bar"></i></div>
+      </div>
+    </header>
+
+    <main>
+      <section class="panel setup" id="setup">
+        <h2>Prima di iniziare</h2>
+        <ul>
+          <li>Stanza silenziosa, niente ventilatori, musica o notifiche.</li>
+          <li>Microfono a 15–20 cm dalla bocca, sempre alla stessa distanza.</li>
+          <li>Mezzosecondo di silenzio prima e dopo ogni riga.</li>
+          <li>Se sbagli, ripeti tutta la riga: non unire pezzi registrati in momenti diversi.</li>
+          <li>La ripresa viene caricata nell’archivio online; serve il codice di accesso fornito da TraduLimba.</li>
+        </ul>
+        <div class="setup-actions">
+          <button type="button" id="enable">Attiva il microfono</button>
+          <span id="mic-status" class="status" role="status">Microfono non ancora attivato.</span>
+        </div>
+      </section>
+
+      <section class="panel speaker" aria-labelledby="speaker-title">
+        <div class="speaker-head">
+          <div>
+            <h2 id="speaker-title">Parlante, consenso e accesso</h2>
+            <p class="hint">
+              Parlante e consenso accompagnano ogni take e finiscono nel manifest
+              pubblico. Usa un nome o un codice; non incollare il documento di
+              consenso. Il codice di accesso resta solo in questa scheda.
+            </p>
+          </div>
+          <span id="speaker-status" class="status" role="status">Inserisci parlante, consenso e codice di accesso.</span>
+        </div>
+        <div class="speaker-fields">
+          <label>Parlante (nome o codice)
+            <input id="speaker" type="text" maxlength="120" autocomplete="name" placeholder="es. Maria P. o LSC-01">
+          </label>
+          <label>Riferimento consenso
+            <input id="consent" type="text" maxlength="120" autocomplete="off" placeholder="es. CONS-2026-011">
+          </label>
+          <label>Codice di accesso
+            <input id="corvoc-token" type="password" maxlength="200" autocomplete="current-password" placeholder="codice fornito da TraduLimba">
+          </label>
+        </div>
+        <div class="speaker-foot">
+          <p class="hint">Archivio online: <code id="metadata-path">Vercel Blob · corvoc/registrazioni.json</code>; parlante, consenso e data compaiono nella nota di ascolto.</p>
+          <button type="button" id="clear-speaker" class="ghost">Dimentica dati del parlante</button>
+        </div>
+      </section>
+
+      <section class="panel browser" aria-label="Righe del copione">
+        <div class="report">
+          <span>Riepilogo righe senza voce umana</span>
+          <a class="button-link" href="/api/report?format=csv" download="riepilogo-registrazioni.csv" title="CSV con una riga per ogni registrazione mancante">CSV</a>
+          <a class="button-link" href="/api/report?format=md" download="riepilogo-registrazioni.md" title="Riepilogo leggibile diviso per gruppi">Markdown</a>
+        </div>
+        <div class="filters">
+          <label>Gruppo <select id="group"></select></label>
+          <label>Stato
+            <select id="filter">
+              <option value="all">Tutte</option>
+              <option value="missing">Senza voce umana</option>
+              <option value="recorded">Con voce umana</option>
+            </select>
+          </label>
+          <label class="search">Cerca
+            <input id="search" type="search" placeholder="testo o id" autocomplete="off">
+          </label>
+        </div>
+        <div id="list" class="list"></div>
+      </section>
+
+      <section class="panel recorder" aria-label="Registrazione della riga">
+        <div class="meta">
+          <span id="group-label"></span>
+          <span id="counter"></span>
+          <span id="variant" class="badge"></span>
+        </div>
+        <p id="line" class="line" lang="sc"></p>
+        <p id="line-status" class="status" role="status"></p>
+
+        <div class="level" aria-hidden="true"><i id="level"></i></div>
+        <p id="timer" class="timer">0,0 s</p>
+
+        <section id="quality" class="quality" aria-live="polite" hidden>
+          <div class="quality-head">
+            <strong>Controllo qualità</strong>
+            <span id="quality-grade" class="quality-grade">—</span>
+          </div>
+          <dl class="quality-grid">
+            <div><dt>Durata</dt><dd id="q-duration">—</dd></div>
+            <div><dt>Silenzio iniziale</dt><dd id="q-lead">—</dd></div>
+            <div><dt>Silenzio finale</dt><dd id="q-tail">—</dd></div>
+            <div><dt>Picco</dt><dd id="q-peak">—</dd></div>
+            <div><dt>Rumore di fondo</dt><dd id="q-noise">—</dd></div>
+            <div><dt>Voce/rumore</dt><dd id="q-snr">—</dd></div>
+            <div><dt>Clipping</dt><dd id="q-clip">—</dd></div>
+          </dl>
+          <ul id="quality-issues" class="quality-issues"></ul>
+          <p class="quality-note">Gli avvisi gialli non bloccano il salvataggio; i problemi rossi sì.</p>
+        </section>
+
+        <div class="actions">
+          <button type="button" id="record" class="primary">Registra</button>
+          <button type="button" id="stop" disabled>Ferma</button>
+          <button type="button" id="save" disabled>Salva online</button>
+          <button type="button" id="retry" disabled>Ripeti</button>
+          <button type="button" id="prev">Precedente</button>
+          <button type="button" id="next">Successiva</button>
+        </div>
+
+        <div class="playback">
+          <div>
+            <span>Clip sintetica</span>
+            <audio id="synthetic" controls preload="none"></audio>
+          </div>
+          <div>
+            <span>Registrazione nel corpus</span>
+            <audio id="recorded" controls preload="none"></audio>
+          </div>
+          <div>
+            <span>La tua ripresa</span>
+            <audio id="take" controls preload="none"></audio>
+          </div>
+        </div>
+
+        <p class="hint">
+          Spazio: registra/ferma · Invio: salva e passa alla successiva · R: ripeti
+        </p>
+      </section>
+    </main>
+
+    <script type="module" src="/corvoc/rec/app.js"></script>
+  </body>
+</html>

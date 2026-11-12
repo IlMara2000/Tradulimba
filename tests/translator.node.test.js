@@ -7,11 +7,11 @@ import {
   TranslatorError,
 } from '../api/_translator.js'
 import {
-  createSpeech,
-  MAX_SPEECH_CHARACTERS,
-  normalizeSpeechInput,
-  SpeechError,
-} from '../api/_speech.js'
+  createVoice,
+  MAX_VOICE_CHARACTERS,
+  normalizeVoiceInput,
+  VoiceError,
+} from '../api/_voice.js'
 import { ApiRequestError, createRateLimiter, validateJsonRequest } from '../api/_requestGuard.js'
 import { gateway } from '@ai-sdk/gateway'
 import { resolveGatewayProvider } from '../api/_aiGateway.js'
@@ -58,20 +58,20 @@ test('applica il limite massimo alla traduzione', () => {
 
 test('normalizza la richiesta vocale e ne limita la lunghezza', () => {
   assert.deepEqual(
-    normalizeSpeechInput({ text: '  Bonas dies  ', language: 'srd', variant: 'logudorese' }),
+    normalizeVoiceInput({ text: '  Bonas dies  ', language: 'srd', variant: 'logudorese' }),
     { text: 'Bonas dies', language: 'srd', variant: 'logudorese' },
   )
   assert.throws(
-    () => normalizeSpeechInput({ text: 'a'.repeat(MAX_SPEECH_CHARACTERS + 1) }),
-    (error) => error instanceof SpeechError && error.statusCode === 413,
+    () => normalizeVoiceInput({ text: 'a'.repeat(MAX_VOICE_CHARACTERS + 1) }),
+    (error) => error instanceof VoiceError && error.statusCode === 413,
   )
   assert.throws(
-    () => normalizeSpeechInput({ text: 'Bonas dies', language: 'inventata' }),
-    (error) => error instanceof SpeechError && error.code === 'INVALID_LANGUAGE',
+    () => normalizeVoiceInput({ text: 'Bonas dies', language: 'ita' }),
+    (error) => error instanceof VoiceError && error.code === 'UNSUPPORTED_LANGUAGE',
   )
   assert.throws(
-    () => normalizeSpeechInput({ text: 'Bonas dies', variant: 'inventata' }),
-    (error) => error instanceof SpeechError && error.code === 'INVALID_VARIANT',
+    () => normalizeVoiceInput({ text: 'Bonas dies', variant: 'inventata' }),
+    (error) => error instanceof VoiceError && error.code === 'INVALID_VARIANT',
   )
 })
 
@@ -128,31 +128,60 @@ test('ritenta un errore transitorio di Apertium e valida il contratto di rispost
   }
 })
 
-test('dichiara il fallback LSC quando il post-editor non è configurato', async () => {
+test('adatta il campidanese con regole quando il post-editor non è configurato', async () => {
   const originalFetch = globalThis.fetch
   globalThis.fetch = async () => new Response(
-    JSON.stringify({ responseData: { translatedText: 'Bona die' } }),
+    JSON.stringify({ responseData: { translatedText: 'Sos domos sunt mannas' } }),
     { status: 200, headers: { 'Content-Type': 'application/json' } },
   )
 
   try {
     const result = await translateText({
-      text: 'Buongiorno',
+      text: 'Le case sono grandi',
       source: 'ita',
       target: 'srd',
       variant: 'campidanese',
     }, {})
-    assert.equal(result.variantApplied, false)
-    assert.match(result.warning, /forma sarda standard/i)
+    assert.equal(result.variantApplied, true)
+    assert.equal(result.method, 'rules')
+    assert.equal(result.translation, 'Is domus sunt mannas')
+    assert.match(result.warning, /adattamento a regole/i)
+    assert.equal(result.analysis.variant, 'campidanese')
+    assert.match(result.analysis.ipa, /ˈdɔmus/)
   } finally {
     globalThis.fetch = originalFetch
   }
 })
 
-test('la voce rifiuta in modo esplicito un ambiente locale senza credenziali', async () => {
+test('la traduzione LSC include sillabe, IPA e controllo ortografico', async () => {
+  const originalFetch = globalThis.fetch
+  globalThis.fetch = async () => new Response(
+    JSON.stringify({ responseData: { translatedText: 'Sas domos sunt mannas' } }),
+    { status: 200, headers: { 'Content-Type': 'application/json' } },
+  )
+
+  try {
+    const result = await translateText({
+      text: 'Le case sono grandi',
+      source: 'ita',
+      target: 'srd',
+      variant: 'lsc',
+    }, {})
+    assert.equal(result.method, 'apertium')
+    assert.equal(result.analysisSide, 'target')
+    assert.equal(result.analysis.words[0].word, 'Sas')
+    assert.deepEqual(result.analysis.words[1].syllables, ['do', 'mos'])
+    assert.equal(result.analysis.words[1].ipa, 'ˈdɔmos')
+    assert.deepEqual(result.orthography, [])
+  } finally {
+    globalThis.fetch = originalFetch
+  }
+})
+
+test('la voce rifiuta in modo esplicito un ambiente senza motore sardo', async () => {
   await assert.rejects(
-    () => createSpeech({ text: 'Bona die', language: 'srd', variant: 'lsc' }, {}),
-    (error) => error instanceof SpeechError && error.code === 'SPEECH_NOT_CONFIGURED',
+    () => createVoice({ text: 'Bona die', language: 'srd', variant: 'lsc' }, {}),
+    (error) => error instanceof VoiceError && error.code === 'VOICE_NOT_CONFIGURED',
   )
 })
 

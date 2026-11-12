@@ -23,6 +23,7 @@ export default [
     ignores: [
       'node_modules/**',
       'dist/**',
+      '.cache/**',
       '.vercel/**',
       'supabase/**',
       'package-lock.json',
@@ -57,10 +58,23 @@ export default [
     },
   },
   {
-    files: ['api/**/*.js', 'vite.config.js', 'tests/**/*.js'],
+    files: ['api/**/*.js', 'scripts/**/*.mjs', 'vite.config.js', 'tests/**/*.js'],
     ...pluginJs.configs.recommended,
     languageOptions: {
       globals: globals.node,
+      parserOptions: {
+        ecmaVersion: 2024,
+        sourceType: 'module',
+      },
+    },
+    plugins: { 'unused-imports': pluginUnusedImports },
+    rules: sharedRules,
+  },
+  {
+    files: ['tools/**/*.js'],
+    ...pluginJs.configs.recommended,
+    languageOptions: {
+      globals: globals.browser,
       parserOptions: {
         ecmaVersion: 2024,
         sourceType: 'module',

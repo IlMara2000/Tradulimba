@@ -72,7 +72,7 @@
         },
         {
           "key": "Permissions-Policy",
-          "value": "camera=(), geolocation=(), microphone=()"
+          "value": "camera=(), geolocation=(), microphone=(self)"
         },
         {
           "key": "X-Content-Type-Options",
@@ -89,7 +89,36 @@
       ]
     }
   ],
+  "functions": {
+    "api/corvoc/*.js": {
+      "includeFiles": "{voice/copione.json,public/voce/manifest.json}"
+    }
+  },
   "rewrites": [
+    {
+      "source": "/corvoc/rec",
+      "destination": "/corvoc/rec/index.html"
+    },
+    {
+      "source": "/corvoc/rec/",
+      "destination": "/corvoc/rec/index.html"
+    },
+    {
+      "source": "/api/script",
+      "destination": "/api/corvoc/script"
+    },
+    {
+      "source": "/api/record",
+      "destination": "/api/corvoc/record"
+    },
+    {
+      "source": "/api/audio",
+      "destination": "/api/corvoc/audio"
+    },
+    {
+      "source": "/api/report",
+      "destination": "/api/corvoc/report"
+    },
     {
       "source": "/",
       "destination": "/index.html"

@@ -41,6 +41,19 @@ test('manifest e hosting descrivono la release stabile senza catch-all', () => {
   assert.equal(manifest.display, 'standalone')
   assert.equal(manifest.display_override, undefined)
   assert.match(serviceWorker, /html\.matchAll\([^\n]+\\\/assets\\\//)
-  assert.deepEqual(vercel.rewrites, [{ source: '/', destination: '/index.html' }])
+  assert.deepEqual(vercel.rewrites, [
+    { source: '/corvoc/rec', destination: '/corvoc/rec/index.html' },
+    { source: '/corvoc/rec/', destination: '/corvoc/rec/index.html' },
+    { source: '/api/script', destination: '/api/corvoc/script' },
+    { source: '/api/record', destination: '/api/corvoc/record' },
+    { source: '/api/audio', destination: '/api/corvoc/audio' },
+    { source: '/api/report', destination: '/api/corvoc/report' },
+    { source: '/', destination: '/index.html' },
+  ])
+  assert.ok(vercel.rewrites.every(({ source }) => !source.includes(':path') && !source.includes('(.*)')))
+  const permissions = vercel.headers
+    .flatMap(({ headers }) => headers)
+    .find(({ key }) => key === 'Permissions-Policy')
+  assert.match(permissions.value, /microphone=\(self\)/)
   assert.doesNotMatch(releaseCopy, /\b(beta|prototipo)\b/i)
 })

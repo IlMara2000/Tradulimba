@@ -1,0 +1,15 @@
+# ecc_skills lock — generato da scripts/setup-ecc-skills.sh
+repo	affaan-m/ECC
+ref	main
+profile	implementation
+skills_dir	.agents/skills
+# name	hash	origin
+ecc-conventions	e893838d8c058b569ce1067b292e1830121ef243e791a667679e3ad79b2ce503	.agents/skills/ecc-conventions
+coding-standards	5756a1b56716f625ec0e55f2e5f4114af13bee8775e4dda3002cb8c8d39a86f7	.agents/skills/coding-standards
+frontend-patterns	7c23baccfa982c82634baa88ca428dbcec93511efd3d1d68397e6c08eef492d1	.agents/skills/frontend-patterns
+backend-patterns	81b18e6e3b507ab810bb7fcfa71a660fb6628e3351d3912c705615d36eab0de3	.agents/skills/backend-patterns
+api-design	4d5190997f381c2043a0b73890276b10010fd5a34ad050e925eda5e98aedb168	.agents/skills/api-design
+security-review	96d53563fb7716e7747ff73b1a35ec6662bbc4b752aa18c8379546d36758c0a4	.agents/skills/security-review
+tdd-workflow	7c25de6cbe161480ce57ef0628002c3d9908fcb359bbdc8de23e0c5a5e1b9784	.agents/skills/tdd-workflow
+verification-loop	200e2cd06358e0ad2380ffc2a7ab8afc67345f32e3eafcdfe0eeb29c4b8528e2	.agents/skills/verification-loop
+documentation-lookup	727af4f020e7704e261e8aaf45f735ff14ec5faf221e5b25cd02e09d34dad7ff	.agents/skills/documentation-lookup

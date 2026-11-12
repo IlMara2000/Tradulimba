@@ -20,12 +20,18 @@ import {
   X,
 } from 'lucide-react'
 import NaraPromo from './components/NaraPromo'
+import LanguageGuide from './components/LanguageGuide'
+import PronunciationPanel from './components/PronunciationPanel'
 import {
   addTranslationHistoryEntry,
   loadTranslationHistory,
   saveTranslationHistory,
 } from './features/translation/history'
 import { buildSpeechScript } from './features/translation/speechScript.js'
+import { analyzeSardinian } from './features/linguistics/index.js'
+import { fetchEngineVoice, loadVoiceManifest } from './features/voice/client.js'
+import { selectCorpusEntry } from './features/voice/corpus.js'
+import { VOICE_TAG_LABELS, voiceNotice } from './features/voice/labels.js'
 
 const loadNaraGame = () => import('./components/NaraGame')
 const NaraGame = lazy(loadNaraGame)
@@ -123,6 +129,7 @@ function App() {
   const [output, setOutput] = useState('')
   const [status, setStatus] = useState('idle')
   const [audioStatus, setAudioStatus] = useState('idle')
+  const [voiceSource, setVoiceSource] = useState('idle')
   const [error, setError] = useState('')
   const [translationNotice, setTranslationNotice] = useState('')
   const [audioNotice, setAudioNotice] = useState('')
@@ -134,6 +141,7 @@ function App() {
   const requestRef = useRef(null)
   const requestSequenceRef = useRef(0)
   const speechRequestRef = useRef(null)
+  const voiceSequenceRef = useRef(0)
   const audioRef = useRef(null)
   const utteranceRef = useRef(null)
   const textAreaRef = useRef(null)
@@ -169,6 +177,7 @@ function App() {
   }, [])
 
   const stopPlayback = useCallback(() => {
+    voiceSequenceRef.current += 1
     speechRequestRef.current?.abort()
     speechRequestRef.current = null
 
@@ -183,6 +192,8 @@ function App() {
     utteranceRef.current = null
     if ('speechSynthesis' in window) window.speechSynthesis.cancel()
     setAudioStatus('idle')
+    setVoiceSource('idle')
+    setAudioNotice('')
   }, [])
 
   useEffect(() => () => {
@@ -297,6 +308,17 @@ function App() {
         }))
         .filter((item) => item.term && item.translation)
 
+      const sardoText = activeTarget === 'srd' ? translatedText : text
+      const analysis = data.analysis && Array.isArray(data.analysis.words)
+        ? data.analysis
+        : analyzeSardinian(sardoText, { variant: effectiveVariant })
+      const orthographyFixes = (Array.isArray(data.orthography) ? data.orthography : [])
+        .slice(0, 6)
+        .filter((fix) => fix && typeof fix.rule === 'string')
+      const varietyChanges = (Array.isArray(data.varietyChanges) ? data.varietyChanges : [])
+        .slice(0, 12)
+        .filter((change) => change && typeof change.from === 'string' && typeof change.to === 'string')
+
       setOutput(translatedText)
       setStatus('success')
       setTranslationNotice(warning)
@@ -306,6 +328,11 @@ function App() {
         variantApplied,
         engine: typeof data.engine === 'string' ? data.engine : '',
         glossary,
+        analysis,
+        analysisSide: data.analysisSide === 'source' || activeTarget === 'ita' ? 'source' : 'target',
+        method: typeof data.method === 'string' ? data.method : '',
+        orthographyFixes,
+        varietyChanges,
       })
       addToHistory({
         id: `${Date.now()}-${Math.random().toString(36).slice(2, 7)}`,
@@ -332,18 +359,25 @@ function App() {
   const swapLanguages = () => {
     const hasResult = Boolean(output)
     const swappedVariant = hasResult ? resultMeta?.effectiveVariant || variant : variant
+    const nextTarget = source
+    const nextInput = output || input
+    const nextOutput = output ? input : ''
+    const sardoText = nextTarget === 'srd' ? nextOutput : nextInput
     cancelTranslation()
     stopPlayback()
     setSource(target)
     setTarget(source)
-    setInput(output || input)
-    setOutput(output ? input : '')
+    setInput(nextInput)
+    setOutput(nextOutput)
     if (hasResult) setVariant(swappedVariant)
     setResultMeta(hasResult ? {
       requestedVariant: resultMeta?.requestedVariant || swappedVariant,
       effectiveVariant: swappedVariant,
       variantApplied: resultMeta?.variantApplied !== false,
       engine: resultMeta?.engine || '',
+      analysis: analyzeSardinian(sardoText, { variant: swappedVariant }),
+      analysisSide: nextTarget === 'srd' ? 'target' : 'source',
+      orthographyFixes: [],
     } : null)
     setStatus('idle')
     setError('')
@@ -382,6 +416,161 @@ function App() {
     }
   }
 
+  // Carica un file audio e attende che sia pronto. Se una clip del corpus è
+  // stata rimossa o il codec non è supportato, il chiamante può ripiegare sul
+  // motore senza lasciare il pulsante bloccato su “Annulla”.
+  const loadAudioElement = (source) => new Promise((resolve, reject) => {
+    const audio = new Audio(source)
+    audio.preload = 'auto'
+    let settled = false
+
+    const cleanup = () => {
+      window.clearTimeout(timer)
+      audio.removeEventListener('canplay', handleReady)
+      audio.removeEventListener('error', handleError)
+    }
+    const handleReady = () => {
+      if (settled) return
+      settled = true
+      cleanup()
+      resolve(audio)
+    }
+    const handleError = () => {
+      if (settled) return
+      settled = true
+      cleanup()
+      reject(new Error('Audio non disponibile'))
+    }
+    const timer = window.setTimeout(() => {
+      if (settled) return
+      settled = true
+      cleanup()
+      reject(new Error('Audio non disponibile'))
+    }, 15000)
+
+    audio.addEventListener('canplay', handleReady, { once: true })
+    audio.addEventListener('error', handleError, { once: true })
+    audio.load()
+    if (audio.readyState >= 3) handleReady()
+  })
+
+  const startAudio = async (audio, source, notice) => {
+    audioRef.current = audio
+    setVoiceSource(source)
+    setAudioNotice(notice)
+    await audio.play()
+    setAudioStatus('playing')
+
+    audio.addEventListener('ended', () => {
+      if (audioRef.current !== audio) return
+      audioRef.current = null
+      setAudioStatus('idle')
+    }, { once: true })
+    audio.addEventListener('error', () => {
+      if (audioRef.current !== audio) return
+      audioRef.current = null
+      setAudioStatus('idle')
+      setError('Non riesco a riprodurre l’audio.')
+    }, { once: true })
+  }
+
+  const startDeviceVoice = (text, language, spokenVariant, reason = '') => {
+    const utterance = browserSpeech(
+      text,
+      language,
+      spokenVariant,
+      () => {
+        if (utteranceRef.current !== utterance) return
+        utteranceRef.current = null
+        setAudioStatus('idle')
+      },
+      () => {
+        if (utteranceRef.current !== utterance) return
+        utteranceRef.current = null
+        setAudioStatus('idle')
+        setError('La voce si è interrotta su questo dispositivo.')
+      },
+    )
+
+    if (!utterance) {
+      setAudioStatus('idle')
+      setVoiceSource('idle')
+      setError('La voce non è disponibile su questo dispositivo.')
+      return false
+    }
+
+    utteranceRef.current = utterance
+    setAudioStatus('playing')
+    setVoiceSource('dispositivo')
+    setAudioNotice(reason || (language === 'srd'
+      ? 'Voce del dispositivo attiva: la trascrizione fonetica approssima la pronuncia sarda.'
+      : 'Voce italiana del dispositivo attiva.'))
+    return true
+  }
+
+  // Ordine di scelta: corpus umano, corpus sintetico sardo, motore TTS sardo,
+  // voce italiana del dispositivo. La provenienza viene sempre dichiarata.
+  const speakSardinian = async (text, spokenVariant) => {
+    const sequence = ++voiceSequenceRef.current
+    setAudioStatus('loading')
+    setError('')
+    setAudioNotice('')
+
+    const manifest = await loadVoiceManifest()
+    if (voiceSequenceRef.current !== sequence) return
+
+    const entry = selectCorpusEntry(manifest, text, spokenVariant)
+    if (entry) {
+      try {
+        const audio = await loadAudioElement(entry.file)
+        if (voiceSequenceRef.current !== sequence) return
+        await startAudio(audio, entry.source, voiceNotice(entry.source, {
+          speaker: entry.speaker,
+          consentRef: entry.consentRef,
+          recordedAt: entry.recordedAt,
+          engine: entry.engine,
+        }))
+        return
+      } catch {
+        const failedAudio = audioRef.current
+        audioRef.current = null
+        failedAudio?.pause()
+        // Clip mancante o illeggibile: si prova il motore.
+      }
+    }
+
+    const controller = new AbortController()
+    speechRequestRef.current = controller
+
+    try {
+      const data = await fetchEngineVoice(text, spokenVariant, controller.signal)
+      if (voiceSequenceRef.current !== sequence || controller.signal.aborted) return
+
+      const audio = await loadAudioElement(`data:${data.mediaType || 'audio/wav'};base64,${data.audio}`)
+      if (voiceSequenceRef.current !== sequence || controller.signal.aborted) return
+
+      await startAudio(audio, 'motore', voiceNotice('motore', {
+        engine: data.engineLabel || data.engine,
+        warnings: data.warnings,
+      }))
+    } catch (voiceError) {
+      if (voiceError.name === 'AbortError' || controller.signal.aborted) return
+      if (voiceSequenceRef.current !== sequence) return
+
+      const failedAudio = audioRef.current
+      audioRef.current = null
+      failedAudio?.pause()
+      startDeviceVoice(
+        text,
+        'srd',
+        spokenVariant,
+        'Motore vocale sardo non disponibile: uso la voce italiana del dispositivo con la trascrizione fonetica.',
+      )
+    } finally {
+      if (speechRequestRef.current === controller) speechRequestRef.current = null
+    }
+  }
+
   const playTranslation = async () => {
     if (!output) return
     if (audioStatus === 'loading' || audioStatus === 'playing') {
@@ -392,91 +581,26 @@ function App() {
     const spokenText = output
     const spokenLanguage = target
     const spokenVariant = resultMeta?.effectiveVariant || variant
-    const playDeviceVoice = (reason = '') => {
-      const utterance = browserSpeech(
+
+    if (spokenLanguage !== 'srd' || spokenText.length > MAX_SPEECH_CHARACTERS) {
+      startDeviceVoice(
         spokenText,
         spokenLanguage,
         spokenVariant,
-        () => {
-          if (utteranceRef.current !== utterance) return
-          utteranceRef.current = null
-          setAudioStatus('idle')
-        },
-        () => {
-          if (utteranceRef.current !== utterance) return
-          utteranceRef.current = null
-          setAudioStatus('idle')
-          setError('La voce si è interrotta su questo dispositivo.')
-        },
+        spokenLanguage === 'srd'
+          ? `Per testi oltre ${MAX_SPEECH_CHARACTERS.toLocaleString('it-IT')} caratteri uso la voce del dispositivo, con la trascrizione fonetica che approssima la pronuncia sarda.`
+          : '',
       )
-
-      if (!utterance) {
-        setAudioStatus('idle')
-        setError('La voce non è disponibile su questo dispositivo.')
-        return
-      }
-
-      utteranceRef.current = utterance
-      setAudioStatus('playing')
-      setAudioNotice(reason || (spokenLanguage === 'srd'
-        ? 'Voce del dispositivo attiva: la trascrizione fonetica approssima la pronuncia sarda.'
-        : 'Voce italiana del dispositivo attiva.'))
-    }
-
-    if (spokenText.length > MAX_SPEECH_CHARACTERS) {
-      playDeviceVoice(`Per testi oltre ${MAX_SPEECH_CHARACTERS.toLocaleString('it-IT')} caratteri uso la voce del dispositivo${spokenLanguage === 'srd' ? ', con la trascrizione fonetica che approssima la pronuncia sarda' : ''}.`)
       return
     }
 
-    const controller = new AbortController()
-    speechRequestRef.current = controller
-    setAudioStatus('loading')
-    setError('')
-    setAudioNotice('')
+    await speakSardinian(spokenText, spokenVariant)
+  }
 
-    try {
-      const response = await fetch('/api/speech', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ text: spokenText, language: spokenLanguage, variant: spokenVariant }),
-        signal: controller.signal,
-      })
-      const data = await response.json().catch(() => ({}))
-
-      if (!response.ok || !data.audio) throw new Error(data.error || 'Voce AI non disponibile')
-      if (controller.signal.aborted) return
-
-      const audio = new Audio(`data:${data.mediaType || 'audio/mpeg'};base64,${data.audio}`)
-      audioRef.current = audio
-      audio.addEventListener('ended', () => {
-        if (audioRef.current !== audio) return
-        audioRef.current = null
-        setAudioStatus('idle')
-      }, { once: true })
-      audio.addEventListener('error', () => {
-        if (audioRef.current !== audio) return
-        audioRef.current = null
-        setAudioStatus('idle')
-        setError('Non riesco a riprodurre l’audio generato.')
-      }, { once: true })
-      await audio.play()
-      setAudioStatus('playing')
-      if (Array.isArray(data.warnings) && data.warnings.length > 0) {
-        setAudioNotice('Audio generato da una trascrizione fonetica: la resa resta approssimata.')
-      } else if (spokenLanguage === 'srd') {
-        setAudioNotice('Audio assistito da una trascrizione fonetica: la pronuncia può variare da paese a paese.')
-      }
-    } catch (speechError) {
-      if (speechError.name === 'AbortError' || controller.signal.aborted) return
-      const failedAudio = audioRef.current
-      audioRef.current = null
-      failedAudio?.pause()
-      playDeviceVoice(spokenLanguage === 'srd'
-        ? 'Il servizio vocale assistito non è disponibile: uso la voce del dispositivo con la trascrizione fonetica sarda.'
-        : 'Il servizio vocale assistito non è disponibile: uso la voce italiana del dispositivo.')
-    } finally {
-      if (speechRequestRef.current === controller) speechRequestRef.current = null
-    }
+  const playWord = async (word, wordVariant) => {
+    if (!word) return
+    stopPlayback()
+    await speakSardinian(word, wordVariant || resultMeta?.effectiveVariant || variant)
   }
 
   const clearAll = () => {
@@ -516,6 +640,11 @@ function App() {
       effectiveVariant: item.effectiveVariant,
       variantApplied: item.variantApplied,
       engine: item.engine,
+      analysis: analyzeSardinian(item.target === 'srd' ? item.output : item.input, {
+        variant: item.effectiveVariant,
+      }),
+      analysisSide: item.target === 'srd' ? 'target' : 'source',
+      orthographyFixes: [],
     })
     setStatus('success')
     setError('')
@@ -591,7 +720,9 @@ function App() {
           <span className="brand__name">Tradu<span>Limba</span></span>
         </a>
         <nav className="site-nav" aria-label="Navigazione principale">
+          <a href="#sa-limba">Sa limba</a>
           <a href="#come-funziona">Come funziona</a>
+          <a href="/corvoc/rec">Studio voce</a>
           <button ref={infoButtonRef} type="button" className="nav-info" aria-label="Il progetto" onClick={() => setShowInfo(true)}>
             <Info size={17} />
             <span className="nav-info__label">Il progetto</span>
@@ -711,7 +842,9 @@ function App() {
                     {audioStatus === 'playing' && <Square size={17} fill="currentColor" />}
                     {audioStatus === 'idle' && <Volume2 size={18} />}
                     {audioStatus === 'loading' ? 'Annulla' : audioStatus === 'playing' ? 'Ferma' : 'Ascolta'}
-                    <span className="voice-tag">assistita</span>
+                    <span className={`voice-tag voice-tag--${voiceSource}`}>
+                      {VOICE_TAG_LABELS[voiceSource] || 'sarda'}
+                    </span>
                   </button>
                 </div>
                 {!isLoading && glossaryHits.length > 0 && (
@@ -736,6 +869,17 @@ function App() {
                 )}
               </section>
             </div>
+
+            {output && resultMeta?.analysis && (
+              <PronunciationPanel
+                analysis={resultMeta.analysis}
+                fixes={resultMeta.orthographyFixes}
+                side={resultMeta.analysisSide || 'target'}
+                text={resultMeta.analysisSide === 'source' ? input : output}
+                onSpeakStart={stopPlayback}
+                onSpeakWord={playWord}
+              />
+            )}
 
             {(error || translationNotice) && (
               <div className={`inline-message${error ? ' inline-message--error' : ''}`} role={error ? 'alert' : 'status'}>
@@ -831,11 +975,13 @@ function App() {
             <article>
               <span className="principle-number">03</span>
               <AudioLines size={24} />
-              <h3>Voce assistita</h3>
-              <p>L’audio parte da una trascrizione fonetica: offre un riferimento d’ascolto, ma non sostituisce la pronuncia di un parlante nativo.</p>
+              <h3>Voce sarda, non italiana</h3>
+              <p>L’audio usa prima le registrazioni del corpus, poi un motore TTS sardo; solo se manca, la voce italiana del dispositivo legge una trascrizione fonetica. Resta un riferimento d’ascolto, non sostituisce un parlante nativo.</p>
             </article>
           </div>
         </section>
+
+        <LanguageGuide />
 
         <NaraPromo onPlay={() => setShowGame(true)} onWarmup={loadNaraGame} />
       </main>
