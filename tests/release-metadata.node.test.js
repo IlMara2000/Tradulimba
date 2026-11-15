@@ -25,6 +25,31 @@ test('la card social ha dimensioni Open Graph 1200 × 630', () => {
   assert.equal(image.readUInt32BE(20), 630)
 })
 
+test('i PNG del logo sono generati a risoluzione nativa, non scalati', () => {
+  const sizes = [
+    ['public/favicon-96x96.png', 96],
+    ['public/web-app-manifest-192x192.png', 192],
+    ['public/web-app-manifest-512x512.png', 512],
+    ['public/apple-touch-icon.png', 180],
+  ]
+  for (const [file, expected] of sizes) {
+    const image = readProjectFile(file)
+    assert.equal(image.subarray(1, 4).toString('ascii'), 'PNG')
+    assert.equal(image.readUInt32BE(16), expected, `${file} width`)
+    assert.equal(image.readUInt32BE(20), expected, `${file} height`)
+  }
+})
+
+test('l’SVG del favicon è vettoriale e aggiornato', () => {
+  const svg = readProjectFile('public/favicon.svg').toString('utf8')
+  assert.match(svg, /<svg/)
+  assert.match(svg, /viewBox="0 0 128 128"/)
+  assert.match(svg, /<rect/)
+  assert.match(svg, /<path/)
+  assert.match(svg, /<rect.*height="22"/)
+  assert.match(svg, /<circle.*r="5"/)
+})
+
 test('manifest e hosting descrivono la release stabile senza catch-all', () => {
   const manifest = JSON.parse(readProjectFile('public/site.webmanifest').toString('utf8'))
   const vercel = JSON.parse(readProjectFile('vercel.json').toString('utf8'))
