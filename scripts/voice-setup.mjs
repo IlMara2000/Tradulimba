@@ -46,7 +46,8 @@ const main = async () => {
   await run('cmake', [
     '-B', BUILD,
     '-DCMAKE_BUILD_TYPE=Release',
-    '-DCMAKE_INSTALL_PREFIX', path.join(CHECKOUT, 'install'),
+    // cmake vuole VAR=valore in un solo argomento: con lo spazio rifiuta la riga.
+    `-DCMAKE_INSTALL_PREFIX=${path.join(CHECKOUT, 'install')}`,
     '-DUSE_ASYNC=OFF',
   ], { cwd: CHECKOUT })
 
