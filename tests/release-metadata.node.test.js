@@ -2,8 +2,22 @@ import assert from 'node:assert/strict'
 import { createHash } from 'node:crypto'
 import { readFileSync } from 'node:fs'
 import test from 'node:test'
+import { fileURLToPath } from 'node:url'
+import {
+  comparePixels,
+  decodePng,
+  downsampleNearest,
+  findRasterizer,
+  rasterizeSvg,
+  readIcoFrames,
+} from './helpers/raster.mjs'
 
 const readProjectFile = (path) => readFileSync(new URL(`../${path}`, import.meta.url))
+const projectPath = (path) => fileURLToPath(new URL(`../${path}`, import.meta.url))
+const SVG_SMALL = 'public/favicon-small.svg'
+const SMALL_RENDER_SIZE = 512
+const RASTERIZER = findRasterizer()
+const hex = (rgb) => '#' + rgb.map((value) => value.toString(16).padStart(2, '0')).join('')
 
 test('metadati social e CSP restano sincronizzati', () => {
   const html = readProjectFile('index.html').toString('utf8')
@@ -79,6 +93,37 @@ test('il favicon.ico contiene i frame 16, 32, 48 e 64 px', () => {
 
   for (const size of [16, 32, 48, 64]) {
     assert.ok(frames.includes(size), `manca il frame ${size} px (trovati: ${frames.join(', ')})`)
+  }
+})
+
+// Il confronto è pixel su pixel: se un altro rasterizzatore ha prodotto l'ICO,
+// i pixel di anti-aliasing sugli angoli possono cambiare di uno o due valori.
+// In quel caso si rigenerano le icone sulla stessa macchina e i due lati tornano
+// coerenti, invece di allentare il confronto e perdere il controllo vero.
+test('i frame 16 e 32 sono il raster del disegno piccolo, non del grande', {
+  skip: RASTERIZER ? false : 'nessun rasterizzatore SVG nel PATH (rsvg-convert, resvg, inkscape, magick, qlmanage)',
+}, () => {
+  const frames = readIcoFrames(readProjectFile('public/favicon.ico'))
+  const master = rasterizeSvg(projectPath(SVG_SMALL), SMALL_RENDER_SIZE)
+  assert.equal(master.width, SMALL_RENDER_SIZE)
+
+  for (const size of [16, 32]) {
+    const frame = frames.find((candidate) => candidate.size === size)
+    assert.ok(frame, `manca il frame ${size} px`)
+
+    const found = decodePng(frame.png)
+    assert.equal(found.width, size)
+    const expected = downsampleNearest(master, size)
+    const differences = comparePixels(expected, found)
+
+    if (differences.length > 0) {
+      const first = differences[0]
+      assert.fail(
+        `frame ${size} px: ${differences.length} pixel diversi dal raster di ${SVG_SMALL}; `
+        + `il primo a (${first.x}, ${first.y}) atteso ${hex(first.expected)} trovato ${hex(first.found)}. `
+        + 'Il frame è stato generato da un altro disegno: rilancia python3 scripts/generate-icons.py.',
+      )
+    }
   }
 })
 
