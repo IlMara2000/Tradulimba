@@ -4,12 +4,15 @@ import { readFileSync } from 'node:fs'
 import test from 'node:test'
 import { fileURLToPath } from 'node:url'
 import {
-  comparePixels,
+  colourCounts,
+  compareWithOutlineTolerance,
+  componentsWhere,
   decodePng,
   downsampleNearest,
   findRasterizer,
   rasterizeSvg,
   readIcoFrames,
+  rgbToHex,
 } from './helpers/raster.mjs'
 
 const readProjectFile = (path) => readFileSync(new URL(`../${path}`, import.meta.url))
@@ -17,7 +20,10 @@ const projectPath = (path) => fileURLToPath(new URL(`../${path}`, import.meta.ur
 const SVG_SMALL = 'public/favicon-small.svg'
 const SMALL_RENDER_SIZE = 512
 const RASTERIZER = findRasterizer()
-const hex = (rgb) => '#' + rgb.map((value) => value.toString(16).padStart(2, '0')).join('')
+// In CI (REQUIRE_RASTERIZER=1) l'assenza di un rasterizzatore è un errore, non
+// uno skip: il confronto coi frame non deve poter passare per mancanza di mezzi.
+const REQUIRE_RASTERIZER = process.env.REQUIRE_RASTERIZER === '1'
+const hex = rgbToHex
 
 test('metadati social e CSP restano sincronizzati', () => {
   const html = readProjectFile('index.html').toString('utf8')
@@ -96,13 +102,98 @@ test('il favicon.ico contiene i frame 16, 32, 48 e 64 px', () => {
   }
 })
 
-// Il confronto è pixel su pixel: se un altro rasterizzatore ha prodotto l'ICO,
-// i pixel di anti-aliasing sugli angoli possono cambiare di uno o due valori.
-// In quel caso si rigenerano le icone sulla stessa macchina e i due lati tornano
-// coerenti, invece di allentare il confronto e perdere il controllo vero.
+// Colori del disegno piccolo: fondo, nuvoletta e le quattro barre.
+const SMALL_PALETTE = ['#2a6684', '#4b7721', '#eef0f2', '#f4aa0a', '#f58214', '#ffffff']
+const SMALL_LIGHTS = new Set(['#eef0f2', '#ffffff'])
+const SMALL_BARS = ['#4b7721', '#f4aa0a', '#f58214', '#2a6684']
+
+// Controlli che leggono solo i pixel dell'ICO: valgono anche dove non c'è un
+// rasterizzatore SVG, e colgono il caso «icone rigenerate dal disegno grande»
+// perché quel render è sfumato (centinaia di colori) e ha il punto arancione
+// staccato sopra le barre.
+test('i frame 16 e 32 hanno la palette del disegno piccolo e nessun punto', () => {
+  const frames = readIcoFrames(readProjectFile('public/favicon.ico'))
+
+  for (const size of [16, 32]) {
+    const frame = frames.find((candidate) => candidate.size === size)
+    assert.ok(frame, `manca il frame ${size} px`)
+    const image = decodePng(frame.png)
+    assert.equal(image.width, size)
+
+    const colours = [...colourCounts(image).keys()].sort()
+    assert.deepEqual(
+      colours,
+      SMALL_PALETTE,
+      `frame ${size} px: ${colours.length} colori invece di 6 — un raster sfumato del disegno grande ne porta centinaia`,
+    )
+
+    const bars = componentsWhere(image, (rgb) => !SMALL_LIGHTS.has(rgbToHex(rgb)))
+    assert.equal(
+      bars.length,
+      4,
+      `frame ${size} px: ${bars.length} componenti colorate invece di 4 — un quinto pezzo è il punto arancione del disegno grande`,
+    )
+
+    const ordered = bars.sort((left, right) => left.left - right.left)
+    assert.deepEqual(
+      ordered.map((bar) => bar.colour),
+      SMALL_BARS,
+      `frame ${size} px: le barre non hanno l'ordine di colore del disegno piccolo`,
+    )
+
+    const baseline = ordered[0].bottom
+    for (const bar of ordered) {
+      assert.equal(bar.bottom, baseline, `frame ${size} px: la barra ${bar.colour} non finisce sulla stessa riga delle altre`)
+    }
+  }
+})
+
+// Il confronto è pixel su pixel, con una sola eccezione dichiarata: gli angoli
+// della nuvoletta, dove l'anti-aliasing di un rasterizzatore può far cadere il
+// bordo sul fondo invece che sul bianco (o viceversa). Quelle differenze sono
+// contate e ammesse entro un margine stretto; qualunque differenza che tocchi
+// una barra, il punto o un colore estraneo resta un errore, anche su un solo
+// pixel. Così la CI (macos-latest, qlmanage di un'altra versione di macOS) non
+// diventa rossa per un angolo, ma un ICO rigenerato dal disegno grande o
+// ridisegnato continua a fallire.
+// Quanti pixel di bordo possono differire per anti-aliasing: una manciata sugli
+// angoli della nuvoletta, non un contorno ridisegnato.
+const OUTLINE_TOLERANCE = (size) => Math.max(2, Math.round(size * size * 0.02))
+
+test('il confronto diretto tollera il bordo antialiasato e niente altro', () => {
+  const image = (rows) => ({
+    width: rows[0].length,
+    height: rows.length,
+    channels: 3,
+    pixels: Buffer.from(rows.flatMap(
+      (row) => row.flatMap((colour) => [1, 3, 5].map((start) => parseInt(colour.slice(start, start + 2), 16))),
+    )),
+  })
+
+  const base = [['#eef0f2', '#ffffff'], ['#ffffff', '#ffffff']]
+  const cornerShifted = [['#ffffff', '#ffffff'], ['#ffffff', '#ffffff']]
+  const tolerated = compareWithOutlineTolerance(image(base), image(cornerShifted), SMALL_LIGHTS)
+  assert.deepEqual(tolerated.fatal, [])
+  assert.equal(tolerated.outline.length, 1)
+
+  const barMoved = [['#eef0f2', '#4b7721'], ['#ffffff', '#ffffff']]
+  const fatal = compareWithOutlineTolerance(image(base), image(barMoved), SMALL_LIGHTS)
+  assert.equal(fatal.fatal.length, 1)
+  assert.equal(fatal.outline.length, 0)
+})
+
 test('i frame 16 e 32 sono il raster del disegno piccolo, non del grande', {
-  skip: RASTERIZER ? false : 'nessun rasterizzatore SVG nel PATH (rsvg-convert, resvg, inkscape, magick, qlmanage)',
+  skip: RASTERIZER || REQUIRE_RASTERIZER
+    ? false
+    : 'nessun rasterizzatore SVG nel PATH (rsvg-convert, resvg, inkscape, magick, qlmanage)',
 }, () => {
+  if (!RASTERIZER) {
+    assert.fail(
+      'REQUIRE_RASTERIZER=1 ma nel PATH non c\'è nessun rasterizzatore SVG '
+      + '(rsvg-convert, resvg, inkscape, magick, qlmanage): il confronto dei frame non può essere saltato',
+    )
+  }
+
   const frames = readIcoFrames(readProjectFile('public/favicon.ico'))
   const master = rasterizeSvg(projectPath(SVG_SMALL), SMALL_RENDER_SIZE)
   assert.equal(master.width, SMALL_RENDER_SIZE)
@@ -114,13 +205,27 @@ test('i frame 16 e 32 sono il raster del disegno piccolo, non del grande', {
     const found = decodePng(frame.png)
     assert.equal(found.width, size)
     const expected = downsampleNearest(master, size)
-    const differences = comparePixels(expected, found)
+    const { fatal, outline } = compareWithOutlineTolerance(expected, found, SMALL_LIGHTS)
 
-    if (differences.length > 0) {
-      const first = differences[0]
+    if (outline.length > 0) {
+      const first = outline[0]
+      console.log(
+        `frame ${size} px: ${outline.length} pixel di bordo diversi per anti-aliasing `
+        + `(primo a (${first.x}, ${first.y}): atteso ${hex(first.expected)}, trovato ${hex(first.found)})`,
+      )
+    }
+    assert.ok(
+      outline.length <= OUTLINE_TOLERANCE(size),
+      `frame ${size} px: ${outline.length} pixel di bordo diversi, oltre il margine di anti-aliasing `
+      + `(${OUTLINE_TOLERANCE(size)}): il disegno o il rasterizzatore sono cambiati. `
+      + 'Rilancia python3 scripts/generate-icons.py sulla stessa macchina che genera l’ICO.',
+    )
+
+    if (fatal.length > 0) {
+      const first = fatal[0]
       assert.fail(
-        `frame ${size} px: ${differences.length} pixel diversi dal raster di ${SVG_SMALL}; `
-        + `il primo a (${first.x}, ${first.y}) atteso ${hex(first.expected)} trovato ${hex(first.found)}. `
+        `frame ${size} px: ${fatal.length} pixel diversi dal raster di ${SVG_SMALL} fuori dal bordo `
+        + `antialiasato; il primo a (${first.x}, ${first.y}) atteso ${hex(first.expected)} trovato ${hex(first.found)}. `
         + 'Il frame è stato generato da un altro disegno: rilancia python3 scripts/generate-icons.py.',
       )
     }

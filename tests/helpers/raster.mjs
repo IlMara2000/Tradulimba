@@ -176,15 +176,97 @@ export const readIcoFrames = (buffer) => {
   return frames
 }
 
-/** Pixel diversi fra due immagini delle stesse dimensioni. */
-export const comparePixels = (left, right) => {
-  const differences = []
-  for (let y = 0; y < left.height; y += 1) {
-    for (let x = 0; x < left.width; x += 1) {
-      const a = pixelAt(left, x, y)
-      const b = pixelAt(right, x, y)
-      if (a[0] !== b[0] || a[1] !== b[1] || a[2] !== b[2]) differences.push({ x, y, expected: a, found: b })
+/** Colore RGB in esadecimale minuscolo, per confronti leggibili. */
+export const rgbToHex = (rgb) => '#' + rgb
+  .map((value) => value.toString(16).padStart(2, '0'))
+  .join('')
+
+/** Colore del pixel (x, y) in esadecimale minuscolo. */
+export const hexAt = (image, x, y) => rgbToHex(pixelAt(image, x, y))
+
+/** Quante volte compare ogni colore dell'immagine. */
+export const colourCounts = (image) => {
+  const counts = new Map()
+  for (let y = 0; y < image.height; y += 1) {
+    for (let x = 0; x < image.width; x += 1) {
+      const colour = hexAt(image, x, y)
+      counts.set(colour, (counts.get(colour) || 0) + 1)
     }
   }
-  return differences
+  return counts
 }
+
+/**
+ * Componenti connesse (4 vicini) dei pixel che soddisfano `isPart`, con bbox e
+ * colore. Serve a distinguere le quattro barre da un eventuale punto staccato.
+ */
+export const componentsWhere = (image, isPart) => {
+  const seen = new Uint8Array(image.width * image.height)
+  const parts = []
+
+  for (let y = 0; y < image.height; y += 1) {
+    for (let x = 0; x < image.width; x += 1) {
+      if (seen[y * image.width + x]) continue
+      if (!isPart(pixelAt(image, x, y))) continue
+
+      const queue = [[x, y]]
+      seen[y * image.width + x] = 1
+      const part = { left: x, top: y, right: x, bottom: y, area: 0, colour: hexAt(image, x, y) }
+
+      while (queue.length > 0) {
+        const [cx, cy] = queue.pop()
+        part.area += 1
+        part.left = Math.min(part.left, cx)
+        part.right = Math.max(part.right, cx)
+        part.top = Math.min(part.top, cy)
+        part.bottom = Math.max(part.bottom, cy)
+
+        for (const [nx, ny] of [[cx + 1, cy], [cx - 1, cy], [cx, cy + 1], [cx, cy - 1]]) {
+          if (nx < 0 || ny < 0 || nx >= image.width || ny >= image.height) continue
+          if (seen[ny * image.width + nx]) continue
+          if (!isPart(pixelAt(image, nx, ny))) continue
+          seen[ny * image.width + nx] = 1
+          queue.push([nx, ny])
+        }
+      }
+
+      parts.push(part)
+    }
+  }
+
+  return parts
+}
+
+/**
+ * Confronto con una tolleranza dichiarata per il solo anti-aliasing.
+ *
+ * I pixel diversi finiscono in due gruppi: `outline` se entrambe le versioni
+ * sono un colore di `lightColours` (fondo e nuvoletta), cioè i punti in cui il
+ * bordo curvo è caduto da una parte o dall'altra a seconda del rasterizzatore;
+ * `fatal` per tutto il resto — barre, punto, colori estranei. Così un
+ * rasterizzatore diverso non fa fallire la CI per un angolo, mentre un disegno
+ * diverso resta un errore.
+ * @param {{ width: number, height: number }} expected
+ * @param {{ width: number, height: number }} found
+ * @param {Iterable<string>} lightColours colori esadecimali ammessi sul bordo
+ */
+export const compareWithOutlineTolerance = (expected, found, lightColours) => {
+  const light = lightColours instanceof Set ? lightColours : new Set(lightColours)
+  const fatal = []
+  const outline = []
+
+  for (let y = 0; y < expected.height; y += 1) {
+    for (let x = 0; x < expected.width; x += 1) {
+      const a = pixelAt(expected, x, y)
+      const b = pixelAt(found, x, y)
+      if (a[0] === b[0] && a[1] === b[1] && a[2] === b[2]) continue
+
+      const entry = { x, y, expected: a, found: b }
+      if (light.has(rgbToHex(a)) && light.has(rgbToHex(b))) outline.push(entry)
+      else fatal.push(entry)
+    }
+  }
+
+  return { fatal, outline }
+}
+
