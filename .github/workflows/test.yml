@@ -43,6 +43,14 @@ jobs:
 
       - run: npm ci
 
+      # Stile e tipi prima dei test: falliscono in pochi secondi e dicono subito
+      # dove guardare, senza aspettare la compilazione di eSpeak.
+      - name: lint
+        run: npm run lint
+
+      - name: typecheck
+        run: npm run typecheck
+
       - name: Rasterizzatore SVG per il test dei frame 16/32
         run: |
           for tool in rsvg-convert resvg inkscape magick qlmanage; do
