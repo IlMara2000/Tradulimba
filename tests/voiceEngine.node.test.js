@@ -138,7 +138,11 @@ test('senza motore configurato risponde 503 con un codice esplicito', async () =
   )
 })
 
-test('il motore eSpeak locale produce un WAV sardo', { skip: !hasLocalEspeak }, async () => {
+// Il motivo dello skip finisce nel log e nel riepilogo della CI: un test che
+// non gira deve dire perché, non sparire.
+const ESPEAK_SKIP_REASON = 'eSpeak NG con voce sarda non compilato in .cache/espeak-ng (npm run voice:setup)'
+
+test('il motore eSpeak locale produce un WAV sardo', { skip: hasLocalEspeak ? false : ESPEAK_SKIP_REASON }, async () => {
   const env = {
     SARDINIAN_ESPEAK_BIN: espeakBin,
     SARDINIAN_ESPEAK_DATA: espeakData,

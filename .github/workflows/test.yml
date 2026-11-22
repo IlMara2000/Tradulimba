@@ -7,6 +7,11 @@ name: test
 # ha prodotto l'ICO (QuickLook), altrimenti l'anti-aliasing degli angoli cambia
 # di qualche pixel. REQUIRE_RASTERIZER=1 trasforma in errore lo skip che il test
 # fa quando lo strumento manca: in CI non si passa per assenza.
+#
+# eSpeak NG con la voce sarda si compila qui (o si riprende dalla cache), così
+# anche il test che sintetizza un WAV gira per davvero. Se la compilazione non
+# riesce il job non si finge verde: quel test viene saltato con un motivo
+# esplicito e il riepilogo finale dice cosa è saltato e perché.
 
 on:
   push:
@@ -18,6 +23,10 @@ permissions:
 concurrency:
   group: test-${{ github.ref }}
   cancel-in-progress: true
+
+env:
+  # Commit del fork con il supporto sardo, lo stesso fissato in scripts/voice-setup.mjs.
+  ESPEAK_REF: 97caf4aea887b4d02668aaf4c4029a1c4ebdde7a
 
 jobs:
   test:
@@ -45,4 +54,51 @@ jobs:
           echo "Nessun rasterizzatore SVG: il test dei frame 16/32 fallirà." >&2
           exit 1
 
-      - run: npm test
+      - name: Cache di eSpeak NG con voce sarda
+        uses: actions/cache@v4
+        with:
+          path: .cache/espeak-ng
+          key: espeak-ng-sc-${{ runner.os }}-${{ env.ESPEAK_REF }}
+
+      - name: Compila eSpeak NG con voce sarda
+        id: espeak
+        # Se la compilazione non riesce il test si salta con un motivo dichiarato
+        # (e il riepilogo lo riporta), invece di far fallire la CI per l'infra.
+        continue-on-error: true
+        run: |
+          if [ -x .cache/espeak-ng/build/src/espeak-ng ]; then
+            echo "eSpeak NG già disponibile (cache)"
+            exit 0
+          fi
+          npm run voice:setup
+
+      - name: npm test
+        run: |
+          set -o pipefail
+          npm test 2>&1 | tee "$RUNNER_TEMP/test-output.log"
+
+      - name: Riepilogo dei test
+        if: always()
+        run: |
+          {
+            echo "### Test"
+            if [ -f "$RUNNER_TEMP/test-output.log" ]; then
+              grep -E '^# (pass|fail|skipped|todo)' "$RUNNER_TEMP/test-output.log" \
+                | sed -E 's/^# ([a-z]+) ([0-9]+)/- \1: \2/' || true
+              echo
+              echo "**Test saltati**"
+              if grep -q '# SKIP' "$RUNNER_TEMP/test-output.log"; then
+                grep '# SKIP' "$RUNNER_TEMP/test-output.log" \
+                  | sed -E 's/^ok [0-9]+ - /- /; s/ # SKIP / — motivo: /' || true
+              else
+                echo "- nessuno"
+              fi
+            else
+              echo "Nessun log dei test: la suite non è partita."
+            fi
+            echo
+            case "${{ steps.espeak.outcome }}" in
+              success) echo "eSpeak NG: compilato o ripreso dalla cache." ;;
+              *) echo "eSpeak NG: compilazione non riuscita (vedi il passo precedente)." ;;
+            esac
+          } >> "$GITHUB_STEP_SUMMARY"
