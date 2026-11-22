@@ -307,17 +307,31 @@ Sono entrate forme verificate che prima mancavano — `cincu`, `ses`, `otu`,
 al posto di `funt`, che il dizionario non registra.
 
 Sono uscite, perché **non ho trovato il lemma**, queste forme: `pronuntziant`,
-`matessi`, `innantis`, `cognome`, `agatat`, `pentzu`, `mezus`,
-`traxi`, `cadira`, `sezus`, `bixinau`, `prenu`, `andaus`, `ancora`, `iscriiri`,
-`imparaus`, `iscusa`, `apu`, `intesu`, `dìa`, `frescu`, `iscarpas`, `noas`,
-`funt`, `armariu`, `abertu`, `iscrizionis`, `cursu`, `depit`, `depis`,
-`curreta`, `rete`, `pratzu`, `ativat`, `lughe`, `miu`, `fait`, `tzilleri`,
-`costau`, `pratu`, `sesi`, `bortas`, `mercau`, `premiu`, `andau`, `minore`,
-`mia`, `peus`, `currit`, `campagna`, `pedra`, `casteddu`, `puddu`, `pudda`,
-`corte`, `beddu`, `differentzia`, `antiga`, `cumpletu`, `pìndulas`, `curtas`,
-`craras`, `tesu`, `sòlitu`, `stas`, `stau`, `ajò`, `perdast`, `serrat`,
-`bisu`, `traballu`, `sciu`, `s'agatat`, `si chistionat`, `si fait`, `si intendit`,
-`si depit`, `si pronuntziant`.
+`cognome`, `agatat`, `traxi`, `sezus`, `andaus`, `iscriiri`,
+`imparaus`, `apu`, `frescu`, `iscarpas`, `noas`,
+`funt`, `iscrizionis`, `depit`, `depis`,
+`curreta`, `pratzu`, `ativat`, `fait`, `bortas`,
+`currit`, `beddu`, `differentzia`, `antiga`, `pìndulas`, `curtas`,
+`craras`, `stas`, `ajò`, `perdast`, `serrat`,
+`si chistionat`, `si fait`, `si intendit`,
+`si depit`, `si pronuntziant`, `s'agatat`.
+
+Elenco ridotto dopo verifica sul Puddu (22 nov 2026): le forme che hanno in
+realtà un lemma accentato (`matessi` → `matéssi`, `innantis` → `innàntis`,
+`pentzu` → `péntzu`, `mezus` → `mézus`, `cadira` → `cadíra`,
+`bixinau` → `bixinàu`, `prenu` → `prénu`, `ancora` → `ancòra`,
+`iscusa` → `iscúsa`, `intesu` → `intésu`, `dìa` → `dí, día`,
+`armariu` → `armàriu`, `abertu` → `abértu`, `cursu` → `cúrsu`,
+`rete` → `rète`, `lughe` → `lúghe`, `miu` → `míu`, `tzilleri` → `tzilléri`,
+`costau` → `costàtu`, `pratu` → `pràtu`, `sesi` → `sèse`,
+`mercau` → `mercàtu`, `premiu` → `prémiu`, `andau` → `andhàu`,
+`minore` → `minòre`, `mia` → `mía`, `peus` → `péus`,
+`campagna` → `campàgna`, `pedra` → `pèdra`, `casteddu` → `castédhu`,
+`puddu` → `púdhu`, `pudda` → `púdha`, `corte` → `còrte`,
+`cumpletu` → `complétu`, `tesu` → `tésu`, `sòlitu` → `sólitu`,
+`stau` → `stàu`, `bisu` → `bísu`, `traballu` → `trabàlliu`,
+`sciu` → `scíu`) sono state tolte; `s'agatat` non è verificabile (errore
+server sul dizionario).
 
 Un'eccezione in quella lista: `manera` un lemma ce l'ha, accentato — `manèra`
 (nf, avb). La grafia corrente resta senza accento, e la parola non compare
