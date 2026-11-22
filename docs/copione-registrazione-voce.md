@@ -307,7 +307,7 @@ Sono entrate forme verificate che prima mancavano — `cincu`, `ses`, `otu`,
 al posto di `funt`, che il dizionario non registra.
 
 Sono uscite, perché **non ho trovato il lemma**, queste forme: `pronuntziant`,
-`matessi`, `manera`, `innantis`, `cognome`, `agatat`, `pentzu`, `mezus`,
+`matessi`, `innantis`, `cognome`, `agatat`, `pentzu`, `mezus`,
 `traxi`, `cadira`, `sezus`, `bixinau`, `prenu`, `andaus`, `ancora`, `iscriiri`,
 `imparaus`, `iscusa`, `apu`, `intesu`, `dìa`, `frescu`, `iscarpas`, `noas`,
 `funt`, `armariu`, `abertu`, `iscrizionis`, `cursu`, `depit`, `depis`,
@@ -318,6 +318,13 @@ Sono uscite, perché **non ho trovato il lemma**, queste forme: `pronuntziant`,
 `craras`, `tesu`, `sòlitu`, `stas`, `stau`, `ajò`, `perdast`, `serrat`,
 `bisu`, `traballu`, `sciu`, `s'agatat`, `si chistionat`, `si fait`, `si intendit`,
 `si depit`, `si pronuntziant`.
+
+Un'eccezione in quella lista: `manera` un lemma ce l'ha, accentato — `manèra`
+(nf, avb). La grafia corrente resta senza accento, e la parola non compare
+comunque nelle 48 frasi attuali. Restano fuori anche le altre forme segnalate
+per le vecchie frasi 12 e 18: `imparaus`, `depit`, `curreta` non hanno lemma
+(«Parola non trovata»), perché il dizionario registra solo gli infiniti
+`imparài`, `dèpi` e `cúrri`/`cúrrere`.
 
 Restano da far controllare a un madrelingua campidanese, perché sono forme generate dalla
 morfologia e non lemmi: il plurale `pitzinnos`, `fueddos`, `dies`, `annos`; il
