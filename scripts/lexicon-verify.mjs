@@ -14,6 +14,7 @@ import {
   auditCorpus,
   auditLexicon,
   auditSnapshot,
+  auditSpelling,
   attestedForms,
   tokensOf,
 } from '../src/features/linguistics/lexiconAudit.js'
@@ -30,6 +31,7 @@ const main = () => {
 
   const rows = flattenCopione(copione).filter((row) => row.variant === 'campidanese')
   const unknown = auditCorpus(rows, snapshot)
+  const misspelled = auditSpelling(rows)
 
   const allowed = attestedForms(snapshot)
   const tokens = new Set(rows.flatMap((row) => tokensOf(row.text)).map((token) => token.toLocaleLowerCase('it')))
@@ -48,6 +50,10 @@ const main = () => {
     for (const [token, text] of grouped) {
       failures.push(`copione: "${token}" non è attestata — «${text}»`)
     }
+  }
+
+  for (const { token, expected, why, text } of misspelled) {
+    failures.push(`copione: "${token}" — si scrive ${expected} (${why}) — «${text}»`)
   }
 
   if (failures.length === 0) {

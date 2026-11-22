@@ -50,6 +50,10 @@ export const CAMPIDANESE_ENTRIES = [
   { it: 'tornare', srd: 'torrai', lemma: 'torràe, torrài', note: 'torrai a + infinito vale “riprendere a”.', group: 'verb' },
   { it: 'trovato', srd: 'agatadu', lemma: 'agatàdu', variants: ['acatàu'], group: 'verb' },
   { it: 'mangiare', srd: 'papai', lemma: 'papàre', variants: ['papàe'], note: 'non papài, che nel dizionario vale “papavero” e “papà”.', group: 'verb' },
+  { it: 'stordire', srd: 'ammachiai', lemma: 'ammachiàe, ammachiài, ammachiàre, ammachiàri', note: 'sempre con due m, come il lemma: “amachiai” non è la forma del dizionario.', group: 'verb' },
+  { it: 'ragionare', srd: 'arrexonai', lemma: 'arrexonài', variants: ['arragionàre'], group: 'verb' },
+  { it: 'concordare', srd: 'cuncordai', lemma: 'cuncordài, cuncordàre', variants: ['cuncodrài'], note: 'vale anche “organizzare, mettere d’accordo”.', group: 'verb' },
+  { it: 'seguire', srd: 'sighiri', lemma: 'sighíre, sighíri', variants: ['sichíre'], group: 'verb' },
 
   // Nomi, luoghi e tempo
   { it: 'acqua', srd: 'abba', lemma: 'àbba', variants: ['àcua'], group: 'noun' },
@@ -88,6 +92,12 @@ export const CAMPIDANESE_ENTRIES = [
   { it: 'aiuto', srd: 'agiudu', lemma: 'agiúdu', variants: ['ajudu', 'axudu', 'azudu'], group: 'noun' },
   { it: 'errore', srd: 'faddina', lemma: 'fàddina', variants: ['fadhina'], note: 'sin. ilmarru, imbàgliu.', group: 'noun' },
   { it: 'studente', srd: 'istudianti', lemma: 'istudiànte, istudiànti', group: 'noun' },
+  { it: 'domenica', srd: 'domìnigu', lemma: 'domínigu', variants: ['domíga'], group: 'noun' },
+  { it: 'romanzo', srd: 'romanzu', lemma: 'romànzu', group: 'noun' },
+  { it: 'consiglio', srd: 'cunsillu', lemma: 'cunsíllu', variants: ['consígiu'], group: 'noun' },
+  { it: 'letteratura', srd: 'literadura', lemma: 'literadúra', group: 'noun' },
+  { it: 'tratto', srd: 'tretu', lemma: 'trétu', note: 'un pezzo di luogo; sin. ciassu, locu, puntu.', group: 'noun' },
+  { it: 'racconto', srd: 'contu', lemma: 'cóntu', note: 'vale anche “conto, questione”; sin. contadu, contànsia, cuentu.', group: 'noun' },
 
   // Aggettivi, avverbi e parole di funzione
   { it: 'molto', srd: 'meda', lemma: 'mèda', group: 'modifier' },
@@ -97,6 +107,7 @@ export const CAMPIDANESE_ENTRIES = [
   { it: 'grande', srd: 'mannu', lemma: 'mànnu', group: 'modifier' },
   { it: 'bello', srd: 'bellu', lemma: 'béllu', group: 'modifier' },
   { it: 'piccolo', srd: 'piticu', lemma: 'pitícu', variants: ['pichícu'], group: 'modifier' },
+  { it: 'dai', srd: 'ajò', lemma: 'ajó!', note: 'esclamazione di esortazione: sta fra i modificatori perché il lessico ammette solo verbo, nome e modificatore.', group: 'modifier' },
   { it: 'vecchio', srd: 'betzu', lemma: 'bétzu', variants: ['béciu'], group: 'modifier' },
   { it: 'in gamba', srd: 'togu', lemma: 'tògo, tògu', note: 'Vale sia come aggettivo sia come nome.', group: 'modifier' },
   { it: 'oggi', srd: 'oi', lemma: 'òi', variants: ['òe'], group: 'modifier' },

@@ -150,9 +150,9 @@ test('analizza una frase completa con IPA, sillabe e note', () => {
   assert.ok(analysis.notes.some((note) => /sas domos/i.test(note)))
 })
 
-test('il lessico campidanese contiene 77 voci con lemma e provenienza', () => {
-  assert.equal(CAMPIDANESE_ENTRY_COUNT, 77)
-  assert.equal(CAMPIDANESE_ENTRIES.length, 77)
+test('il lessico campidanese contiene 88 voci con lemma e provenienza', () => {
+  assert.equal(CAMPIDANESE_ENTRY_COUNT, 88)
+  assert.equal(CAMPIDANESE_ENTRIES.length, 88)
 
   const seen = new Set()
   for (const entry of CAMPIDANESE_ENTRIES) {
@@ -164,7 +164,7 @@ test('il lessico campidanese contiene 77 voci con lemma e provenienza', () => {
     seen.add(entry.it)
   }
 
-  const counts = { verb: 18, noun: 36, modifier: 23 }
+  const counts = { verb: 22, noun: 42, modifier: 24 }
   for (const [group, expected] of Object.entries(counts)) {
     assert.equal(CAMPIDANESE_ENTRIES.filter((entry) => entry.group === group).length, expected)
   }

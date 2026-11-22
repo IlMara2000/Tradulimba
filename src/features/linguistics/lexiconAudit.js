@@ -56,6 +56,40 @@ export const normalizeLexeme = (value) => (
     : ''
 )
 
+/**
+ * Grafie sbagliate viste nei materiali di partenza: la forma corretta è quella
+ * del dizionario. Il caso da cui nascce il controllo è «amachiai» con una m
+ * sola, scritto così nei reel: il lemma del Puddu ne ha due.
+ * `pattern` lavora sul testo normalizzato (minuscolo); il lookbehind esclude la
+ * doppia m, così «ammachiai» non viene segnalato.
+ * @type {Array<{ pattern: RegExp, expected: string, why: string }>}
+ */
+export const SPELLING_TRAPS = [
+  {
+    pattern: /(?<![\p{L}m])amach\p{L}*/gu,
+    expected: 'ammachiai',
+    why: 'il dizionario ha ammachiàe, ammachiài, ammachiàre, ammachiàri: due m',
+  },
+]
+
+/**
+ * Forme scritte con una grafia segnalata dentro un testo.
+ * @param {unknown} text
+ * @returns {Array<{ form: string, expected: string, why: string }>}
+ */
+export const findMisspellings = (text) => {
+  const normalized = normalizeLexeme(text)
+  if (!normalized) return []
+
+  const hits = []
+  for (const trap of SPELLING_TRAPS) {
+    for (const match of normalized.matchAll(trap.pattern)) {
+      hits.push({ form: match[0], expected: trap.expected, why: trap.why })
+    }
+  }
+  return hits
+}
+
 /** "iscíri, iscíre 1" → ["iscíri", "iscíre"] */
 const lemmaParts = (lemma) => (
   typeof lemma === 'string'
@@ -171,6 +205,17 @@ export const auditLexicon = (entries, snapshot) => {
   }
 
   for (const entry of entries) {
+    // La grafia si controlla prima dell'attestazione: una forma scritta male va
+    // segnalata come tale, non solo come «assente dallo snapshot».
+    for (const hit of findMisspellings(entry.srd)) {
+      problems.push(`${entry.srd}: si scrive ${hit.expected} (${hit.why})`)
+    }
+    for (const variant of entry.variants || []) {
+      for (const hit of findMisspellings(variant)) {
+        problems.push(`${variant}: si scrive ${hit.expected} (${hit.why})`)
+      }
+    }
+
     const key = normalizeLexeme(entry.srd)
     const saved = index.get(key)
     if (!saved) {
@@ -213,4 +258,22 @@ export const auditCorpus = (rows, snapshot) => {
   }
 
   return unknown
+}
+
+/**
+ * Le righe campidanesi non devono contenere grafie segnalate.
+ * @param {Array<{ variant: string, text: string }>} rows
+ * @returns {Array<{ token: string, expected: string, why: string, text: string }>}
+ */
+export const auditSpelling = (rows) => {
+  const hits = []
+
+  for (const row of rows) {
+    if (row.variant !== 'campidanese') continue
+    for (const hit of findMisspellings(row.text)) {
+      hits.push({ token: hit.form, expected: hit.expected, why: hit.why, text: row.text })
+    }
+  }
+
+  return hits
 }

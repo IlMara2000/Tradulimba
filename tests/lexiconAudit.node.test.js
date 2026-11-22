@@ -6,7 +6,9 @@ import {
   auditCorpus,
   auditLexicon,
   auditSnapshot,
+  auditSpelling,
   attestedForms,
+  findMisspellings,
   normalizeLexeme,
   tokensOf,
 } from '../src/features/linguistics/lexiconAudit.js'
@@ -30,6 +32,33 @@ test('ogni voce del lessico campidanese ha la sua attestazione', () => {
 test('nessuna riga campidanese del copione usa forme non attestate', () => {
   const rows = flattenCopione(copione)
   assert.deepEqual(auditCorpus(rows, snapshot), [])
+  assert.deepEqual(auditSpelling(rows), [])
+})
+
+test('il lessico scrive ammachiai con due m, come il lemma del Puddu', () => {
+  const entry = CAMPIDANESE_ENTRIES.find((candidate) => candidate.srd === 'ammachiai')
+  assert.ok(entry, 'manca la voce ammachiai')
+  assert.equal(entry.lemma, 'ammachiàe, ammachiài, ammachiàre, ammachiàri')
+  assert.equal(snapshot.lemmi.ammachiai.lemma, entry.lemma)
+  assert.deepEqual(findMisspellings(entry.lemma), [])
+})
+
+test('una m sola viene segnalata, come nei reel', () => {
+  const rows = [{ variant: 'campidanese', text: 'Ma ita ti ses amachiai? Seu amachiendu.' }]
+  const hits = auditSpelling(rows)
+  assert.deepEqual(hits.map(({ token }) => token), ['amachiai', 'amachiendu'])
+  assert.ok(hits.every(({ expected }) => expected === 'ammachiai'))
+
+  const correct = [{ variant: 'campidanese', text: 'Ma ita ti ses ammachiai? Seu ammachiendu.' }]
+  assert.deepEqual(auditSpelling(correct), [])
+
+  const lsc = [{ variant: 'lsc', text: 'Amachiai non si scrive così.' }]
+  assert.deepEqual(auditSpelling(lsc), [])
+})
+
+test('la base non può contenere la grafia con una m sola', () => {
+  const problems = auditLexicon([{ it: 'stordire', srd: 'amachiai', lemma: 'ammachiàe, amachiài' }], snapshot)
+  assert.ok(problems.some((problem) => /si scrive ammachiai/.test(problem)), problems.join(' | '))
 })
 
 test('il controllo segnala davvero una forma inventata', () => {

@@ -48,6 +48,82 @@
       "gruppo": "verb",
       "consultato": "2026-11-22"
     },
+    "ammachiai": {
+      "lemma": "ammachiàe, ammachiài, ammachiàre, ammachiàri",
+      "varianti": [],
+      "gruppo": "verb",
+      "consultato": "2026-11-22"
+    },
+    "arrexonai": {
+      "lemma": "arrexonài",
+      "varianti": [
+        "arragionàre"
+      ],
+      "gruppo": "verb",
+      "consultato": "2026-11-22"
+    },
+    "cuncordai": {
+      "lemma": "cuncordài, cuncordàre",
+      "varianti": [
+        "cuncodrài"
+      ],
+      "gruppo": "verb",
+      "consultato": "2026-11-22"
+    },
+    "sighiri": {
+      "lemma": "sighíre, sighíri",
+      "varianti": [
+        "sichíre"
+      ],
+      "gruppo": "verb",
+      "consultato": "2026-11-22"
+    },
+    "domìnigu": {
+      "lemma": "domínigu",
+      "varianti": [
+        "domíga"
+      ],
+      "gruppo": "noun",
+      "consultato": "2026-11-22"
+    },
+    "romanzu": {
+      "lemma": "romànzu",
+      "varianti": [],
+      "gruppo": "noun",
+      "consultato": "2026-11-22"
+    },
+    "cunsillu": {
+      "lemma": "cunsíllu",
+      "varianti": [
+        "consígiu"
+      ],
+      "gruppo": "noun",
+      "consultato": "2026-11-22"
+    },
+    "literadura": {
+      "lemma": "literadúra",
+      "varianti": [],
+      "gruppo": "noun",
+      "consultato": "2026-11-22"
+    },
+    "tretu": {
+      "lemma": "trétu",
+      "varianti": [],
+      "gruppo": "noun",
+      "consultato": "2026-11-22"
+    },
+    "contu": {
+      "lemma": "cóntu",
+      "varianti": [],
+      "gruppo": "noun",
+      "consultato": "2026-11-22"
+    },
+    "ajò": {
+      "lemma": "ajó!",
+      "varianti": [],
+      "gruppo": "modifier",
+      "consultato": "2026-11-22"
+    },
     "sciri": {
       "lemma": "iscíri, iscíre 1",
       "varianti": [
