@@ -1,0 +1,48 @@
+name: test
+
+# A ogni push su main, così i test girano anche fuori da questa macchina.
+#
+# Il runner è macOS perché il test dei frame 16/32 confronta public/favicon.ico
+# con il raster di public/favicon-small.svg: serve lo stesso rasterizzatore che
+# ha prodotto l'ICO (QuickLook), altrimenti l'anti-aliasing degli angoli cambia
+# di qualche pixel. REQUIRE_RASTERIZER=1 trasforma in errore lo skip che il test
+# fa quando lo strumento manca: in CI non si passa per assenza.
+
+on:
+  push:
+    branches: [main]
+
+permissions:
+  contents: read
+
+concurrency:
+  group: test-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  test:
+    runs-on: macos-latest
+    env:
+      REQUIRE_RASTERIZER: '1'
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+
+      - run: npm ci
+
+      - name: Rasterizzatore SVG per il test dei frame 16/32
+        run: |
+          for tool in rsvg-convert resvg inkscape magick qlmanage; do
+            if command -v "$tool" >/dev/null 2>&1; then
+              echo "rasterizzatore: $tool"
+              exit 0
+            fi
+          done
+          echo "Nessun rasterizzatore SVG: il test dei frame 16/32 fallirà." >&2
+          exit 1
+
+      - run: npm test
