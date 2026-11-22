@@ -1,9 +1,10 @@
-const CACHE_NAME = 'tradulimba-v4'
+const CACHE_NAME = 'tradulimba-v6'
 const STATIC_ASSETS = [
   '/',
   '/index.html',
   '/site.webmanifest',
   '/favicon.svg',
+  '/favicon.ico',
   '/favicon-96x96.png',
   '/apple-touch-icon.png',
   '/web-app-manifest-192x192.png',

@@ -1,23 +1,35 @@
-"""Genera i PNG del logo TraduLimba partendo dalle stesse forme dell'SVG.
+"""Genera le icone TraduLimba a partire dai due SVG del marchio.
 
-Usa solo PIL (Pillow). Esegui con:
+Le fonti sono due file, non coordinate sparse nel codice:
+
+- public/favicon.svg, il disegno completo, rasterizzato a 1024 px. Lo script
+  misura nell'immagine il fondo, la nuvoletta con la coda e le barre, e da
+  quelle misure ricava le taglie grandi e le proporzioni della card social.
+- public/favicon-small.svg, il disegno ottico per 16 e 32 px: barre più alte,
+  punto omesso, griglia intera. I frame 16 e 32 dell'ICO sono il raster diretto
+  di quel file, senza ricalcolare la geometria.
+
     python3 scripts/generate-icons.py
-oppure tramite il package.json "icon:generate".
+    npm run icon:generate
+
+Rasterizzatori provati in ordine: rsvg-convert, resvg, inkscape, ImageMagick,
+QuickLook (macOS).
 """
 
+import os
+import re
+import shutil
+import subprocess
 import sys
-from PIL import Image, ImageDraw, ImageFont
+import tempfile
+from collections import deque
 
-COLORS = {
-    'bg': (238, 240, 242, 255),
-    'stroke': (255, 255, 255, 255),
-    'body': (23, 56, 75, 255),
-    'green': (75, 119, 33, 255),
-    'amber': (244, 170, 10, 255),
-    'orange': (245, 130, 20, 255),
-    'blue': (42, 102, 132, 255),
-    'text_dark': (90, 107, 116, 255),
-}
+from PIL import Image, ImageChops, ImageDraw, ImageFont
+
+SVG = 'public/favicon.svg'
+SVG_SMALL = 'public/favicon-small.svg'
+RENDER_SIZE = 1024
+SMALL_RENDER_SIZE = 512
 
 SIZES = [
     ('favicon-96x96.png', 96),
@@ -26,6 +38,245 @@ SIZES = [
     ('apple-touch-icon.png', 180),
 ]
 
+ICO_FRAMES = [16, 32, 48, 64]
+
+TITLE_COLOUR = (0x17, 0x38, 0x4B)
+SUBTITLE_COLOUR = (0x5A, 0x6B, 0x74)
+
+
+# ---------------------------------------------------------------- rasterizzare
+
+def _raster_commands(svg, size, out_path, tmp_dir):
+    return (
+        ('rsvg-convert', ['-w', str(size), '-h', str(size), svg, '-o', out_path]),
+        ('resvg', ['--width', str(size), '--height', str(size), svg, out_path]),
+        ('inkscape', ['--export-type=png', f'--export-filename={out_path}',
+                      f'--export-width={size}', svg]),
+        ('magick', [svg, '-background', 'none', '-resize', f'{size}x{size}', out_path]),
+        ('qlmanage', ['-t', '-s', str(size), '-o', tmp_dir, svg]),
+    )
+
+
+def _sized_svg(svg, size, out_dir):
+    """Copia temporanea con width/height = `size`.
+
+    Serve per QuickLook, che disegna l'SVG alla sua dimensione intrinseca: con un
+    viewBox piccolo lascierebbe il disegno in un angolo di un riquadro bianco
+    invece di riempire la taglia richiesta.
+    """
+    text = open(svg, encoding='utf-8').read()
+
+    def fix(match):
+        tag = re.sub(r'\s(width|height)="[^"]*"', '', match.group(0))
+        tag = tag[:-1].rstrip()
+        tag = tag[:-1] if tag.endswith('/') else tag
+        return f'{tag.rstrip()} width="{size}" height="{size}">'
+
+    sized = re.sub(r'<svg\b[^>]*>', fix, text, count=1)
+    path = os.path.join(out_dir, 'render-' + str(size) + '.svg')
+    with open(path, 'w', encoding='utf-8') as handle:
+        handle.write(sized)
+    return path
+
+
+def rasterize(size=RENDER_SIZE, svg=SVG):
+    """Rende `svg` a `size` px quadrati con il primo strumento disponibile."""
+    with tempfile.TemporaryDirectory() as tmp_dir:
+        out_path = os.path.join(tmp_dir, 'render.png')
+        sized = _sized_svg(svg, size, tmp_dir)
+        for tool, args in _raster_commands(sized, size, out_path, tmp_dir):
+            if not shutil.which(tool):
+                continue
+            if tool == 'qlmanage':
+                produced = os.path.join(tmp_dir, os.path.basename(sized) + '.png')
+            else:
+                produced = out_path
+            try:
+                subprocess.run([tool] + args, check=True, timeout=120,
+                               stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
+            except (subprocess.SubprocessError, OSError):
+                continue
+            if not os.path.exists(produced):
+                continue
+
+            with Image.open(produced) as rendered:
+                image = rendered.convert('RGBA')
+            if image.size != (size, size):
+                image = image.resize((size, size), Image.LANCZOS)
+            return image, tool
+
+    raise SystemExit(
+        'Nessun rasterizzatore SVG disponibile: installa rsvg-convert, resvg, '
+        'inkscape o ImageMagick (su macOS basta QuickLook).'
+    )
+
+
+# ------------------------------------------------------------------- misurare
+
+def _mask_for(image, colour):
+    r, g, b = image.split()
+    return ImageChops.multiply(
+        ImageChops.multiply(
+            r.point(lambda v, c=colour[0]: 255 if v == c else 0),
+            g.point(lambda v, c=colour[1]: 255 if v == c else 0),
+        ),
+        b.point(lambda v, c=colour[2]: 255 if v == c else 0),
+    )
+
+
+def _components(mask, box, min_area=8):
+    """Componenti connesse (4-vicini) dentro il riquadro, come bbox assolute."""
+    x0, y0, x1, y1 = box
+    crop = mask.crop(box)
+    width, height = crop.size
+    pixels = crop.load()
+    seen = [[False] * width for _ in range(height)]
+    found = []
+
+    for row in range(height):
+        for column in range(width):
+            if seen[row][column] or pixels[column, row] == 0:
+                continue
+            queue = deque([(column, row)])
+            seen[row][column] = True
+            area = 0
+            left, right, top, bottom = column, column, row, row
+
+            while queue:
+                cx, cy = queue.popleft()
+                area += 1
+                left = min(left, cx)
+                right = max(right, cx)
+                top = min(top, cy)
+                bottom = max(bottom, cy)
+                for nx, ny in ((cx + 1, cy), (cx - 1, cy), (cx, cy + 1), (cx, cy - 1)):
+                    if 0 <= nx < width and 0 <= ny < height \
+                            and not seen[ny][nx] and pixels[nx, ny]:
+                        seen[ny][nx] = True
+                        queue.append((nx, ny))
+
+            if area >= min_area:
+                found.append((left + x0, top + y0, right + 1 + x0, bottom + 1 + y0))
+
+    return found
+
+
+def _row_widths(mask, box):
+    """Larghezza del riempimento per ogni riga del riquadro."""
+    widths = []
+    x0, y0, x1, y1 = box
+    for row in range(y0, y1):
+        row_box = mask.crop((x0, row, x1, row + 1)).getbbox()
+        widths.append((row, 0 if not row_box else row_box[2] - row_box[0]))
+    return widths
+
+
+def analyse(rendered):
+    """Legge dal render fondo, nuvoletta, coda, barre e punto."""
+    image = rendered.convert('RGB')
+    total = image.size[0] * image.size[1]
+    counted = sorted(image.getcolors(total), key=lambda item: item[0], reverse=True)
+    if not counted or counted[0][0] < total * 0.2:
+        raise SystemExit('Il render non ha un fondo dominante: SVG inatteso.')
+
+    background = counted[0][1]
+    palette = [colour for _, colour in counted if colour != background]
+
+    def luminance(colour):
+        return sum(colour) / 3
+
+    bubbles = [colour for colour in palette if luminance(colour) > 200]
+    if not bubbles:
+        raise SystemExit('Il render non contiene la nuvoletta chiara.')
+    bubble = max(bubbles, key=lambda colour: dict(counted).get(colour, 0))
+
+    accents = [colour for colour in palette if colour != bubble]
+    bubble_mask = _mask_for(image, bubble)
+    bubble_box = bubble_mask.getbbox()
+    if not bubble_box:
+        raise SystemExit('Il render non contiene la nuvoletta.')
+
+    bars = []
+    dot = None
+    for colour in accents:
+        mask = _mask_for(image, colour)
+        box = mask.getbbox()
+        if not box:
+            continue
+        for part in _components(mask, box):
+            left, top, right, bottom = part
+            width, height = right - left, bottom - top
+            if height > width * 1.4:
+                bars.append({'left': left, 'top': top, 'right': right,
+                             'bottom': bottom, 'colour': colour})
+            else:
+                dot = {'left': left, 'top': top, 'right': right,
+                       'bottom': bottom, 'colour': colour}
+
+    if len(bars) < 2:
+        raise SystemExit('Il render non contiene le barre del marchio.')
+
+    bars.sort(key=lambda bar: bar['left'])
+
+    widths = _row_widths(bubble_mask, bubble_box)
+    full_width = max(width for _, width in widths) or 1
+    body_bottom = max(row for row, width in widths if width >= full_width * 0.5)
+    tail_rows = [(row, width) for row, width in widths if row > body_bottom and width]
+    tail = None
+    if tail_rows:
+        tail_top = min(row for row, _ in tail_rows)
+        tail_bottom = max(row for row, _ in tail_rows)
+        tail_x = bubble_mask.crop(
+            (bubble_box[0], tail_top, bubble_box[2], tail_bottom + 1)
+        ).getbbox()
+        if tail_x:
+            tail = {
+                'left': tail_x[0] + bubble_box[0],
+                'bottom': tail_bottom,
+                'right': tail_x[2] + bubble_box[0],
+            }
+
+    # Raggio degli angoli: quanto la prima riga è più stretta del corpo.
+    top_row_width = max(width for row, width in widths if row <= bubble_box[1] + 1)
+    radius = max(0.0, (full_width - top_row_width) / 2)
+
+    return {
+        'size': image.size[0],
+        'background': background,
+        'bubble': bubble,
+        'bubble_box': bubble_box,
+        'radius': radius,
+        'tail': tail,
+        'bars': bars,
+        'dot': dot,
+        'body_bottom': body_bottom,
+    }
+
+
+# ------------------------------------------------------------------- disegnare
+
+def render_small(size):
+    """Frame 16/32: raster del disegno ottico, nessuna geometria ricalcolata.
+
+    Si rasterizza a SMALL_RENDER_SIZE e si scende di un fattore intero con NEAREST:
+    la griglia del piccolo SVG è fatta di unità intere, quindi ogni pixel finale
+    resta un colore pieno del disegno e i bordi non si sfumano. Rasterizzare
+    QuickLook direttamente a 16 px lascerebbe il disegno in un angolo bianco.
+    """
+    if SMALL_RENDER_SIZE % size:
+        raise SystemExit(f'{SMALL_RENDER_SIZE} non è un multiplo di {size}: scala non intera')
+    master, _tool = rasterize(SMALL_RENDER_SIZE, SVG_SMALL)
+    return master.convert('RGB').resize((size, size), Image.NEAREST)
+
+
+def render_detailed(master, model, size):
+    """Disegno completo: il render dell'SVG ridotto alla taglia richiesta."""
+    if size >= model['size']:
+        return master.convert('RGB')
+    return master.convert('RGB').resize((size, size), Image.LANCZOS)
+
+
+# ------------------------------------------------------------------ card social
 
 def _font(size, bold=False):
     candidates = [
@@ -43,73 +294,57 @@ def _font(size, bold=False):
     return ImageFont.load_default()
 
 
-def draw_logo(size, out_path, social=False):
-    if social:
-        W, H = 1200, 630
-        scale = 1200 / 128.0  # stessa base vettoriale 128, adattata al card
-        im = Image.new('RGBA', (W, H), COLORS['bg'])
-        draw = ImageDraw.Draw(im)
-    else:
-        scale = size / 128.0
-        im = Image.new('RGBA', (size, size), (0, 0, 0, 0))
-        draw = ImageDraw.Draw(im)
+def draw_social(master, model, out_path):
+    width, height = 1200, 630
+    card = Image.new('RGB', (width, height), model['background'])
+    logo_size = 240
+    logo_y = 40
+    logo = master.convert('RGB').resize((logo_size, logo_size), Image.LANCZOS)
+    card.paste(logo, ((width - logo_size) // 2, logo_y))
 
-    def s(v):
-        return int(round(v * scale))
+    draw = ImageDraw.Draw(card)
+    # Colori di brand fissi: il titolo e il payoff non seguono il fondo, che
+    # può cambiare senza che il testo diventi grigio.
+    draw.text((width // 2, logo_y + logo_size + 24), 'TraduLimba',
+              fill=TITLE_COLOUR, font=_font(64, bold=True), anchor='mt')
+    draw.text((width // 2, logo_y + logo_size + 86),
+              'Il sardo, in tutte le sue voci.',
+              fill=SUBTITLE_COLOUR, font=_font(32), anchor='mt')
+    card.save(out_path, 'PNG')
+    print(f'wrote {out_path} {card.size}')
 
-    x, y, w, h = s(22), s(18), s(84), s(84)
-    r = s(16)
-    draw.rounded_rectangle([x, y, x + w, y + h], radius=r,
-                           fill=COLORS['bg'], outline=COLORS['stroke'], width=s(3))
 
-    bars = [
-        (s(34), s(64), s(7), s(22), COLORS['green']),
-        (s(48), s(52), s(7), s(34), COLORS['amber']),
-        (s(62), s(64), s(7), s(22), COLORS['orange']),
-        (s(76), s(52), s(7), s(34), COLORS['blue']),
-    ]
-    for bx, by, bw, bh, color in bars:
-        draw.rounded_rectangle([bx, by, bx + bw, by + bh], radius=s(3.5), fill=color)
-
-    draw.ellipse([s(96) - s(5), s(40) - s(5), s(96) + s(5), s(40) + s(5)],
-                 fill=COLORS['orange'])
-
-    if social:
-        # Card 1200x630: logo compatto centrato, testo sotto
-        logo_size = 240
-        logo_x = (W - logo_size) // 2
-        logo_y = 40
-        x, y, w, h = logo_x, logo_y, logo_size, logo_size
-        r = 30
-        draw.rounded_rectangle([x, y, x + w, y + h], radius=r,
-                               fill=COLORS['bg'], outline=COLORS['stroke'], width=6)
-        bars = [
-            (x + 45, y + 175, 28, 85, COLORS['green']),
-            (x + 98, y + 125, 28, 135, COLORS['amber']),
-            (x + 151, y + 175, 28, 85, COLORS['orange']),
-            (x + 204, y + 125, 28, 135, COLORS['blue']),
-        ]
-        for bx, by, bw, bh, color in bars:
-            draw.rounded_rectangle([bx, by, bx + bw, by + bh], radius=14, fill=color)
-        draw.ellipse([x + 280 - 20, y + 85 - 20,
-                      x + 280 + 20, y + 85 + 20], fill=COLORS['orange'])
-
-        font = _font(64, bold=True)
-        draw.text((W // 2, logo_y + logo_size + 24), 'TraduLimba',
-                  fill=COLORS['body'], font=font, anchor='mt')
-        font2 = _font(32)
-        draw.text((W // 2, logo_y + logo_size + 86),
-                  'Il sardo, in tutte le sue voci.',
-                  fill=COLORS['text_dark'], font=font2, anchor='mt')
-
-    im.save(out_path, 'PNG')
-    print(f'wrote {out_path} {im.size}')
-
+# ----------------------------------------------------------------------- main
 
 def main():
+    rendered, tool = rasterize()
+    print(f'render {rendered.size[0]}px con {tool}')
+    model = analyse(rendered)
+    master = render_detailed(rendered, model, model['size'])
+    master.save('public/icona-1024.png', 'PNG', optimize=True)
+    print(f"wrote public/icona-1024.png {master.size}")
+
     for name, size in SIZES:
-        draw_logo(size, f'public/{name}')
-    draw_logo(0, 'public/tradulimba-social.png', social=True)
+        render_detailed(rendered, model, size).save(f'public/{name}', 'PNG', optimize=True)
+        print(f'wrote public/{name} {size}x{size}')
+
+    frames = {}
+    for size in ICO_FRAMES:
+        frames[size] = render_small(size) if size <= 32 \
+            else render_detailed(rendered, model, size)
+    print('frame ' + '/'.join(str(size) for size in ICO_FRAMES if size <= 32)
+          + ' da ' + SVG_SMALL)
+
+    ico_path = 'public/favicon.ico'
+    try:
+        frames[64].save(ico_path, sizes=[(s, s) for s in ICO_FRAMES],
+                        append_images=[frames[s] for s in ICO_FRAMES if s != 64])
+    except (TypeError, ValueError):
+        master.save(ico_path, sizes=[(s, s) for s in ICO_FRAMES])
+        print('nota: Pillow non accetta frame dedicati, ico ridotto dal render')
+    print('wrote public/favicon.ico ' + '/'.join(str(size) for size in ICO_FRAMES))
+
+    draw_social(rendered, model, 'public/tradulimba-social.png')
 
 
 if __name__ == '__main__':

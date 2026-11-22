@@ -1,20 +1,17 @@
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 128 128">
-  <defs>
-    <filter id="soft" x="-10%" y="-10%" width="120%" height="120%">
-      <feDropShadow dx="0" dy="2" stdDeviation="3" flood-color="#17384B" flood-opacity="0.18"/>
-    </filter>
-  </defs>
+  <!-- Stessa resa dell'icona raster: superficie avorio opaca, nuvoletta bianca. -->
+  <rect width="128" height="128" fill="#EEF0F2"/>
 
-  <!-- Chat bubble body -->
-  <path d="M22 18h84a16 16 0 0 1 16 16v44a16 16 0 0 1-16 16H56l-20 14v-14H22a16 16 0 0 1-16-16V34a16 16 0 0 1 16-16Z"
-        fill="#EEF0F2" stroke="#FFFFFF" stroke-width="3" filter="url(#soft)"/>
+  <!-- Nuvoletta del dialogo con la coda -->
+  <path d="M22 18h84a16 16 0 0 1 16 16v41a16 16 0 0 1-16 16H56l-20 14v-14H22a16 16 0 0 1-16-16V34a16 16 0 0 1 16-16Z"
+        fill="#FFFFFF"/>
 
-  <!-- Sound wave bars -->
+  <!-- Quattro barre: le voci del sardo -->
   <rect x="34" y="64" width="7" height="22" rx="3.5" fill="#4B7721"/>
   <rect x="48" y="52" width="7" height="34" rx="3.5" fill="#F4AA0A"/>
   <rect x="62" y="64" width="7" height="22" rx="3.5" fill="#F58214"/>
   <rect x="76" y="52" width="7" height="34" rx="3.5" fill="#2A6684"/>
 
-  <!-- Sardinian letter accent -->
+  <!-- Punto arancione -->
   <circle cx="96" cy="40" r="5" fill="#F58214"/>
 </svg>

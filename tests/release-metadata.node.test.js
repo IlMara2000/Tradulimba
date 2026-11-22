@@ -50,6 +50,38 @@ test('l’SVG del favicon è vettoriale e aggiornato', () => {
   assert.match(svg, /<circle.*r="5"/)
 })
 
+test('il favicon.ico contiene i frame 16, 32, 48 e 64 px', () => {
+  const ico = readProjectFile('public/favicon.ico')
+  assert.equal(ico.readUInt16LE(0), 0, 'riservato')
+  assert.equal(ico.readUInt16LE(2), 1, 'tipo icona')
+
+  const count = ico.readUInt16LE(4)
+  const frames = []
+  for (let index = 0; index < count; index += 1) {
+    const entry = 6 + index * 16
+    const width = ico[entry] || 256
+    const height = ico[entry + 1] || 256
+    const bytes = ico.readUInt32LE(entry + 8)
+    const offset = ico.readUInt32LE(entry + 12)
+
+    assert.equal(width, height, `frame ${width}×${height} non quadrato`)
+    assert.ok(offset + bytes <= ico.length, `frame ${width} px troncato`)
+
+    // Ogni frame è un PNG: il suo IHDR deve dichiarare la stessa taglia della voce.
+    const payload = ico.subarray(offset, offset + bytes)
+    assert.equal(payload.subarray(0, 8).toString('hex'), '89504e470d0a1a0a', `frame ${width} senza firma PNG`)
+    assert.equal(payload.subarray(12, 16).toString('ascii'), 'IHDR')
+    assert.equal(payload.readUInt32BE(16), width, `frame ${width} con IHDR ${payload.readUInt32BE(16)}`)
+    assert.equal(payload.readUInt32BE(20), height)
+
+    frames.push(width)
+  }
+
+  for (const size of [16, 32, 48, 64]) {
+    assert.ok(frames.includes(size), `manca il frame ${size} px (trovati: ${frames.join(', ')})`)
+  }
+})
+
 test('manifest e hosting descrivono la release stabile senza catch-all', () => {
   const manifest = JSON.parse(readProjectFile('public/site.webmanifest').toString('utf8'))
   const vercel = JSON.parse(readProjectFile('vercel.json').toString('utf8'))

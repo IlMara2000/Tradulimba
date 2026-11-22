@@ -1,0 +1,21 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 16 16" width="16" height="16">
+  <!-- Versione ottica per 16 e 32 px.
+       Griglia intera di 16 unità: ogni bordo cade su un confine di pixel, così
+       anche a 16 px la nuvoletta non si sfalda. Rispetto all'icona grande le
+       barre sono più alte e il punto è omesso, perché a queste taglie
+       diventerebbe un blob e ruberebbe spazio alle barre. -->
+  <rect width="16" height="16" fill="#EEF0F2"/>
+
+  <!-- Nuvoletta con la coda: corpo 1..15 × 2..11, coda larga 4 unità e alta 3,
+       abbastanza da restare un triangolo leggibile anche a 16 px. -->
+  <path d="M3 2h10a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2H7l-4 3v-3H3a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2Z"
+        fill="#FFFFFF"/>
+
+  <!-- Quattro barre da 2 px con 1 px di spazio, appoggiate a y=10. -->
+  <g shape-rendering="crispEdges">
+    <rect x="3" y="6" width="2" height="4" fill="#4B7721"/>
+    <rect x="6" y="4" width="2" height="6" fill="#F4AA0A"/>
+    <rect x="9" y="6" width="2" height="4" fill="#F58214"/>
+    <rect x="12" y="4" width="2" height="6" fill="#2A6684"/>
+  </g>
+</svg>
