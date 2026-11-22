@@ -216,6 +216,136 @@ Apu a papai.
 
 Dopo le parole, crea spontaneamente una frase naturale con ciascuna e trascrivi esattamente quello che hai pronunciato.
 
+### Blocco esteso — fonemi critici e 48 frasi
+
+Questo blocco è già nel copione operativo `voice/copione.json`, nei gruppi
+`campidanese-suoni` e `campidanese-frasi`, quindi compare nello studio di
+registrazione con i suoi id. Serve a coprire i cinque punti in cui una voce
+italiana o una LSC letto con pronuncia italiana sbaglia di più.
+
+Parole isolate (`campidanese-suoni`):
+
+```text
+grafia x / j — atteso [ʒ]
+Puxeddu, Nuxis, Maxia
+grafia sc — atteso [ʃ]
+Pusceddu, Nuscis, sciri, iscola, pisci
+grafia tz — atteso [ts]
+ditzionàriu, pretzisu, pratza, tziu
+grafia dd — atteso [ɖɖ] retroflesso
+bidda, caddu, casteddu, puddu
+vocali toniche e lunghe
+lìngua, Mòguru, pìndulas, fèmina, númeru
+```
+
+**Revisione del gruppo parole (22 novembre 2026).** Ogni voce è stata cercata
+sul *Ditzionàriu in Línia*. Confermate `tzíu`, `castédhu`, `písci`, `pretzísu`,
+`púdhu`, `píndula`, `númeru`; sostituiti `iscriiri` → niente (l'infinito
+campidanese non ha lemma: il dizionario ha `iscríere`), `sci` → `sciri`,
+`pratzu` (lemma assente) → `pratza`. Rimossi senza sostituto `ativat` e `beddu`,
+che non hanno lemma. Il gruppo è quindi sceso da 24 a 21 parole: le righe che
+restano coperte sono x/j, sc, tz, dd e le vocali toniche.
+
+Frasi (`campidanese-frasi`), in ordine, 48 righe:
+
+```text
+Puxeddu est unu fueddu de sa bidda.
+Nuxis est una bidda de sa Sardigna.
+Nuscis e Nuxis sunt duus fueddos.
+Sa genti de Nuxis est in fèsta.
+Maxia est unu fueddu de sa limba sarda.
+Sa x de Puxeddu no est sa sc de Pusceddu.
+In iscola su maistru est unu òmini de Nuxis.
+Su sardu de Nuxis est in su ditzionàriu.
+S'iscola de sa bidda est manna.
+Su ditzionàriu est in s'iscola.
+Custu est su ditzionàriu de sa limba sarda.
+Su pitzinnu est in s'iscola.
+Is pitzinnos sunt in s'iscola.
+Su maistru de s'iscola est cun is pitzinnos.
+Gratzias meda, sa limba sarda est bella.
+Su chelu est iscuru immui.
+Sa bidda est in su monti.
+Su caddu est in sa bidda.
+Su caddu est mannu e bellu.
+Sa bidda de su monti est manna.
+Milli e centu annos sunt meda.
+Custu est s'annu de sa fèsta.
+Su pipiu est piticu, su caddu est mannu.
+Mércuris, giòbia e chenàbura sunt dies de sa cida.
+Oi est mércuris.
+Cras est giòbia.
+A mangianu su chelu est bellu.
+A sero sa bidda est iscura.
+Unu, duus, tres, bàtoro, cincu.
+Ses, otu, noi, dexi.
+Lunis, martis, mércuris, giòbia, chenàbura.
+Sàbadu e domíniga sunt dies de fèsta.
+Su pani est in sa domo.
+Su binu est in sa domo.
+S'abba est in sa domo.
+Su pani e su binu sunt in sa domo.
+Sa domo de sa bidda est betza.
+S'òmini e sa fèmina sunt in domo.
+Su pipiu e sa mama sunt in domo.
+Sa mùsica de sa fèsta est in sa bidda.
+Torrai a domo est bellu.
+Immui sa mùsica est in sa bidda.
+Sa terra de sa bidda est manna e bella.
+Su monti e su mari sunt in sa terra sarda.
+Totu is pitzinnos sunt in s'iscola.
+Su pipiu est in domo chene sa mama.
+Sa dimanda de su pitzinnu est tosta.
+Chene agiudu sa faddina est tosta puru.
+```
+
+**Revisione del 22 novembre 2026.** Le frasi sono state ripassate una per una
+sul *Ditzionàriu in Línia*: ogni parola di contenuto ora ha un lemma attestato.
+Sono entrate forme verificate che prima mancavano — `cincu`, `ses`, `otu`,
+`noi`, `dexi`, `lunis`, `martis`, `sàbadu`, `domíniga`, `prus`, `genti`,
+`caddu`, `iscuru`, `tardu`, `fèsta`, `mùsica`, `pitzinnu`, `cústu` — e `sunt`
+al posto di `funt`, che il dizionario non registra.
+
+Sono uscite, perché **non ho trovato il lemma**, queste forme: `pronuntziant`,
+`matessi`, `manera`, `innantis`, `cognome`, `agatat`, `pentzu`, `mezus`,
+`traxi`, `cadira`, `sezus`, `bixinau`, `prenu`, `andaus`, `ancora`, `iscriiri`,
+`imparaus`, `iscusa`, `apu`, `intesu`, `dìa`, `frescu`, `iscarpas`, `noas`,
+`funt`, `armariu`, `abertu`, `iscrizionis`, `cursu`, `depit`, `depis`,
+`curreta`, `rete`, `pratzu`, `ativat`, `lughe`, `miu`, `fait`, `tzilleri`,
+`costau`, `pratu`, `sesi`, `bortas`, `mercau`, `premiu`, `andau`, `minore`,
+`mia`, `peus`, `currit`, `campagna`, `pedra`, `casteddu`, `puddu`, `pudda`,
+`corte`, `beddu`, `differentzia`, `antiga`, `cumpletu`, `pìndulas`, `curtas`,
+`craras`, `tesu`, `sòlitu`, `stas`, `stau`, `ajò`, `perdast`, `serrat`,
+`bisu`, `traballu`, `sciu`, `s'agatat`, `si chistionat`, `si fait`, `si intendit`,
+`si depit`, `si pronuntziant`.
+
+Restano da far controllare a un madrelingua campidanese, perché sono forme generate dalla
+morfologia e non lemmi: il plurale `pitzinnos`, `fueddos`, `dies`, `annos`; il
+femminile `manna`, `iscura`, `betza`, `bella`, `tosta`, `sarda`; l'articolo
+`is`/`s'`; e i nomi propri `Puxeddu`, `Pusceddu`, `Nuxis`, `Nuscis`, `Maxia`,
+`Sardigna`, che non si verificano sul dizionario perché sono nomi.
+
+Indicazioni per questo blocco:
+
+- **Non fondere `x` e `sc`**: `Puxeddu` [ʒ] e `Pusceddu` [ʃ] sono due parole
+diverse, e la riga 6 serve proprio a verificare che restino distinte. Vale lo
+stesso per `Nuxis` e `Nuscis`.
+- **`dd` è retroflesso** [ɖɖ] in `bidda` e `caddu` (righe 1, 3, 17, 18, 20,
+37, 40). Dopo la revisione non ci sono più coppie di controllo come
+`beddu`/`puddu`: quelle parole non hanno attestazione e vanno verificate prima
+di tornare nel copione. Se la tua parlata non usa la retroflessione, registra la
+tua realizzazione reale e annotala: meglio un dato vero che una pronuncia
+imitata.
+- **Allunga la tonica** dove la varietà lo richiede e non spostare l'accento
+sulle sdrucciole: `Mòguru`, `pìndulas`, `númeru`.
+- Leggi in tono naturale, come se spiegassi a uno studente: non recitare e non
+rallentare per "far capire meglio".
+- Le righe campidanese **non vengono sintetizzate** con eSpeak, che copre solo la
+LSC: compaiono in `npm run voice:check` come mancanti finché una persona non le
+registra. È il comportamento previsto, non un errore.
+- Fai controllare i testi da un madrelingua dell'area di Mogoro prima della
+sessione definitiva: riregistrare 48 frasi costa più di una revisione.
+
 ## Fase 6B — logudorese
 
 Esegui questo blocco soltanto se è la tua varietà reale. Fai controllare grafia e trascrizione da un madrelingua logudorese.

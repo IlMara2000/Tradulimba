@@ -8,6 +8,13 @@ import {
   normalizeSardinian,
 } from '../src/features/linguistics/orthography.js'
 import { adaptToVariant, compareVarieties } from '../src/features/linguistics/varieties.js'
+import {
+  buildCampidanesePrompt,
+  CAMPIDANESE_ENTRIES,
+  CAMPIDANESE_ENTRY_COUNT,
+  findCampidaneseMatches,
+  getCampidaneseEntry,
+} from '../src/features/linguistics/campidaneseLexicon.js'
 
 const syllables = (word) => splitWordSyllables(word).map((syllable) => syllable.text)
 
@@ -141,6 +148,45 @@ test('analizza una frase completa con IPA, sillabe e note', () => {
   assert.equal(analysis.truncated, false)
   assert.equal(analysis.issueCounts.errors, 0)
   assert.ok(analysis.notes.some((note) => /sas domos/i.test(note)))
+})
+
+test('il lessico campidanese contiene 77 voci con lemma e provenienza', () => {
+  assert.equal(CAMPIDANESE_ENTRY_COUNT, 77)
+  assert.equal(CAMPIDANESE_ENTRIES.length, 77)
+
+  const seen = new Set()
+  for (const entry of CAMPIDANESE_ENTRIES) {
+    assert.ok(entry.it.trim(), 'voce senza termine italiano')
+    assert.ok(entry.srd.trim(), `${entry.it}: forma sarda mancante`)
+    assert.ok(entry.lemma.trim(), `${entry.it}: lemma del dizionario mancante`)
+    assert.ok(['verb', 'noun', 'modifier'].includes(entry.group), `${entry.it}: gruppo non valido`)
+    assert.equal(seen.has(entry.it), false, `voce duplicata: ${entry.it}`)
+    seen.add(entry.it)
+  }
+
+  const counts = { verb: 18, noun: 36, modifier: 23 }
+  for (const [group, expected] of Object.entries(counts)) {
+    assert.equal(CAMPIDANESE_ENTRIES.filter((entry) => entry.group === group).length, expected)
+  }
+})
+
+test('il lessico fissato dal post-editor resta quello verificato', () => {
+  assert.deepEqual(
+    findCampidaneseMatches('Grazie per il pane e il vino.').map((match) => [match.term, match.translation]),
+    [['Grazie', 'gratzias'], ['pane', 'pani'], ['vino', 'binu']],
+  )
+  assert.deepEqual(findCampidaneseMatches('Una casalinga casuale.'), [])
+  assert.equal(findCampidaneseMatches('x'.repeat(10), { limit: 0 }).length, 0)
+
+  assert.equal(getCampidaneseEntry('mangiare').srd, 'papai')
+  assert.equal(getCampidaneseEntry('papai').it, 'mangiare')
+  assert.equal(getCampidaneseEntry('noti').srd, 'note')
+  assert.equal(getCampidaneseEntry('parola inesistente'), undefined)
+
+  assert.equal(buildCampidanesePrompt([]), '')
+  const prompt = buildCampidanesePrompt(findCampidaneseMatches('Grazie del pane'))
+  assert.match(prompt, /gratzias \(lemma gràtzia 1\)/)
+  assert.match(prompt, /non è in questo elenco/i)
 })
 
 test('il confronto tra varietà restituisce sempre le tre forme', () => {

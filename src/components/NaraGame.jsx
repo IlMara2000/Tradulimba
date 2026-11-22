@@ -101,7 +101,7 @@ function NaraMap({ progress, onStart }) {
         </div>
       </section>
 
-      <ol className="nara-path" aria-label="Percorso di 10 livelli">
+      <ol className="nara-path" aria-label={`Percorso di ${NARA_LEVEL_IDS.length} livelli`}>
         {visibleLevels.map((level, index) => {
           const completion = progress.completed[level.id]
           const isComplete = Boolean(completion)

@@ -1,0 +1,880 @@
+{
+  "fonte": "Ditzionàriu in Línia (Puddu) — ditzionariu.nor-web.eu",
+  "consultato": "2026-11-22",
+  "nota": "Solo lemmi controllati a mano, uno per uno, sul dizionario. Il campo lemma è la forma accentata del dizionario (notazione lessicografica), la chiave è la grafia della norma sarda. Le sezioni grammatica, nomi_propri, flessioni e lettere non sono lemmi: sono forme ammesse nel copione che il dizionario non registra come voci.",
+  "lemmi": {
+    "bufai": {
+      "lemma": "bufài, bufàe",
+      "varianti": [
+        "bufàe"
+      ],
+      "gruppo": "verb",
+      "consultato": "2026-11-22"
+    },
+    "andai": {
+      "lemma": "andài",
+      "varianti": [
+        "andari",
+        "andhare"
+      ],
+      "gruppo": "verb",
+      "consultato": "2026-11-22"
+    },
+    "benni": {
+      "lemma": "bènni",
+      "varianti": [],
+      "gruppo": "verb",
+      "consultato": "2026-11-22"
+    },
+    "fai": {
+      "lemma": "fài",
+      "varianti": [],
+      "gruppo": "verb",
+      "consultato": "2026-11-22"
+    },
+    "narai": {
+      "lemma": "narài",
+      "varianti": [
+        "nài"
+      ],
+      "gruppo": "verb",
+      "consultato": "2026-11-22"
+    },
+    "chistionai": {
+      "lemma": "chistionài",
+      "varianti": [
+        "chiltionàre"
+      ],
+      "gruppo": "verb",
+      "consultato": "2026-11-22"
+    },
+    "sciri": {
+      "lemma": "iscíri, iscíre 1",
+      "varianti": [
+        "ischíre"
+      ],
+      "gruppo": "verb",
+      "consultato": "2026-11-22"
+    },
+    "biri": {
+      "lemma": "bíri",
+      "varianti": [],
+      "gruppo": "verb",
+      "consultato": "2026-11-22"
+    },
+    "intendi": {
+      "lemma": "intèndi",
+      "varianti": [],
+      "gruppo": "verb",
+      "consultato": "2026-11-22"
+    },
+    "cumprendi": {
+      "lemma": "cumprèndi",
+      "varianti": [],
+      "gruppo": "verb",
+      "consultato": "2026-11-22"
+    },
+    "traballai": {
+      "lemma": "traballài",
+      "varianti": [],
+      "gruppo": "verb",
+      "consultato": "2026-11-22"
+    },
+    "ligi": {
+      "lemma": "lígi",
+      "varianti": [],
+      "gruppo": "verb",
+      "consultato": "2026-11-22"
+    },
+    "burrai": {
+      "lemma": "burrài",
+      "varianti": [],
+      "gruppo": "verb",
+      "consultato": "2026-11-22"
+    },
+    "annullai": {
+      "lemma": "annullài, annullàre",
+      "varianti": [
+        "annudhài"
+      ],
+      "gruppo": "verb",
+      "consultato": "2026-11-22"
+    },
+    "proai": {
+      "lemma": "proài",
+      "varianti": [],
+      "gruppo": "verb",
+      "consultato": "2026-11-22"
+    },
+    "torrai": {
+      "lemma": "torràe, torrài",
+      "varianti": [],
+      "gruppo": "verb",
+      "consultato": "2026-11-22"
+    },
+    "agatadu": {
+      "lemma": "agatàdu",
+      "varianti": [
+        "acatàu"
+      ],
+      "gruppo": "verb",
+      "consultato": "2026-11-22"
+    },
+    "papai": {
+      "lemma": "papàre",
+      "varianti": [
+        "papàe"
+      ],
+      "gruppo": "verb",
+      "consultato": "2026-11-22"
+    },
+    "abba": {
+      "lemma": "àbba",
+      "varianti": [
+        "àcua"
+      ],
+      "gruppo": "noun",
+      "consultato": "2026-11-22"
+    },
+    "pani": {
+      "lemma": "pàni",
+      "varianti": [
+        "pàne"
+      ],
+      "gruppo": "noun",
+      "consultato": "2026-11-22"
+    },
+    "binu": {
+      "lemma": "bínu",
+      "varianti": [
+        "vinu"
+      ],
+      "gruppo": "noun",
+      "consultato": "2026-11-22"
+    },
+    "domo": {
+      "lemma": "domo",
+      "varianti": [],
+      "gruppo": "noun",
+      "consultato": "2026-11-22"
+    },
+    "òmini": {
+      "lemma": "ómini",
+      "varianti": [
+        "ómine"
+      ],
+      "gruppo": "noun",
+      "consultato": "2026-11-22"
+    },
+    "fèmina": {
+      "lemma": "fémina",
+      "varianti": [
+        "fémmia",
+        "fémmina"
+      ],
+      "gruppo": "noun",
+      "consultato": "2026-11-22"
+    },
+    "pipiu": {
+      "lemma": "pipíu",
+      "varianti": [
+        "pupiu"
+      ],
+      "gruppo": "noun",
+      "consultato": "2026-11-22"
+    },
+    "mama": {
+      "lemma": "màma",
+      "varianti": [
+        "mamma"
+      ],
+      "gruppo": "noun",
+      "consultato": "2026-11-22"
+    },
+    "limba": {
+      "lemma": "límba",
+      "varianti": [
+        "língua"
+      ],
+      "gruppo": "noun",
+      "consultato": "2026-11-22"
+    },
+    "fueddu": {
+      "lemma": "fuédhu",
+      "varianti": [
+        "faédhu"
+      ],
+      "gruppo": "noun",
+      "consultato": "2026-11-22"
+    },
+    "ditzionàriu": {
+      "lemma": "ditzionàriu",
+      "varianti": [
+        "dissionàriu"
+      ],
+      "gruppo": "noun",
+      "consultato": "2026-11-22"
+    },
+    "iscola": {
+      "lemma": "iscòla",
+      "varianti": [
+        "isciòla"
+      ],
+      "gruppo": "noun",
+      "consultato": "2026-11-22"
+    },
+    "maistru": {
+      "lemma": "maístru",
+      "varianti": [
+        "maistu",
+        "mastru"
+      ],
+      "gruppo": "noun",
+      "consultato": "2026-11-22"
+    },
+    "bidda": {
+      "lemma": "bídha",
+      "varianti": [
+        "vidha"
+      ],
+      "gruppo": "noun",
+      "consultato": "2026-11-22"
+    },
+    "mari": {
+      "lemma": "màri",
+      "varianti": [
+        "màre"
+      ],
+      "gruppo": "noun",
+      "consultato": "2026-11-22"
+    },
+    "monti": {
+      "lemma": "mònti",
+      "varianti": [
+        "mònte"
+      ],
+      "gruppo": "noun",
+      "consultato": "2026-11-22"
+    },
+    "chelu": {
+      "lemma": "chélu",
+      "varianti": [
+        "célu"
+      ],
+      "gruppo": "noun",
+      "consultato": "2026-11-22"
+    },
+    "istràda": {
+      "lemma": "istràda",
+      "varianti": [
+        "istrata",
+        "strada"
+      ],
+      "gruppo": "noun",
+      "consultato": "2026-11-22"
+    },
+    "partida": {
+      "lemma": "partída",
+      "varianti": [
+        "partía"
+      ],
+      "gruppo": "noun",
+      "consultato": "2026-11-22"
+    },
+    "benida": {
+      "lemma": "benída",
+      "varianti": [
+        "benía"
+      ],
+      "gruppo": "noun",
+      "consultato": "2026-11-22"
+    },
+    "mércuris": {
+      "lemma": "mércuris",
+      "varianti": [
+        "mélcuris"
+      ],
+      "gruppo": "noun",
+      "consultato": "2026-11-22"
+    },
+    "giòbia": {
+      "lemma": "gióbia",
+      "varianti": [
+        "gióvia",
+        "zóbia"
+      ],
+      "gruppo": "noun",
+      "consultato": "2026-11-22"
+    },
+    "chenàbura": {
+      "lemma": "chenàbura",
+      "varianti": [
+        "chenàbara",
+        "chenàbra"
+      ],
+      "gruppo": "noun",
+      "consultato": "2026-11-22"
+    },
+    "terra": {
+      "lemma": "tèrra",
+      "varianti": [],
+      "gruppo": "noun",
+      "consultato": "2026-11-22"
+    },
+    "die": {
+      "lemma": "díe",
+      "varianti": [
+        "dí"
+      ],
+      "gruppo": "noun",
+      "consultato": "2026-11-22"
+    },
+    "note": {
+      "lemma": "nòte",
+      "varianti": [
+        "noti"
+      ],
+      "gruppo": "noun",
+      "consultato": "2026-11-22"
+    },
+    "mangianu": {
+      "lemma": "mangiànu",
+      "varianti": [
+        "manzanu",
+        "mengianu",
+        "mignanu"
+      ],
+      "gruppo": "noun",
+      "consultato": "2026-11-22"
+    },
+    "sero": {
+      "lemma": "sèro",
+      "varianti": [
+        "sèra"
+      ],
+      "gruppo": "noun",
+      "consultato": "2026-11-22"
+    },
+    "cida": {
+      "lemma": "cída",
+      "varianti": [
+        "chída"
+      ],
+      "gruppo": "noun",
+      "consultato": "2026-11-22"
+    },
+    "annu": {
+      "lemma": "ànnu",
+      "varianti": [],
+      "gruppo": "noun",
+      "consultato": "2026-11-22"
+    },
+    "mese": {
+      "lemma": "mèse",
+      "varianti": [
+        "mesi"
+      ],
+      "gruppo": "noun",
+      "consultato": "2026-11-22"
+    },
+    "citade": {
+      "lemma": "citàde",
+      "varianti": [
+        "citàdi",
+        "tzitade"
+      ],
+      "gruppo": "noun",
+      "consultato": "2026-11-22"
+    },
+    "dimanda": {
+      "lemma": "dimàndha",
+      "varianti": [
+        "domanda",
+        "domanna"
+      ],
+      "gruppo": "noun",
+      "consultato": "2026-11-22"
+    },
+    "agiudu": {
+      "lemma": "agiúdu",
+      "varianti": [
+        "ajudu",
+        "axudu",
+        "azudu"
+      ],
+      "gruppo": "noun",
+      "consultato": "2026-11-22"
+    },
+    "faddina": {
+      "lemma": "fàddina",
+      "varianti": [
+        "fadhina"
+      ],
+      "gruppo": "noun",
+      "consultato": "2026-11-22"
+    },
+    "istudianti": {
+      "lemma": "istudiànte, istudiànti",
+      "varianti": [],
+      "gruppo": "noun",
+      "consultato": "2026-11-22"
+    },
+    "meda": {
+      "lemma": "mèda",
+      "varianti": [],
+      "gruppo": "modifier",
+      "consultato": "2026-11-22"
+    },
+    "pagu": {
+      "lemma": "pàgu",
+      "varianti": [
+        "pàcu"
+      ],
+      "gruppo": "modifier",
+      "consultato": "2026-11-22"
+    },
+    "beni": {
+      "lemma": "bèni",
+      "varianti": [
+        "bène"
+      ],
+      "gruppo": "modifier",
+      "consultato": "2026-11-22"
+    },
+    "mali": {
+      "lemma": "màli",
+      "varianti": [],
+      "gruppo": "modifier",
+      "consultato": "2026-11-22"
+    },
+    "mannu": {
+      "lemma": "mànnu",
+      "varianti": [],
+      "gruppo": "modifier",
+      "consultato": "2026-11-22"
+    },
+    "bellu": {
+      "lemma": "béllu",
+      "varianti": [],
+      "gruppo": "modifier",
+      "consultato": "2026-11-22"
+    },
+    "piticu": {
+      "lemma": "pitícu",
+      "varianti": [
+        "pichícu"
+      ],
+      "gruppo": "modifier",
+      "consultato": "2026-11-22"
+    },
+    "betzu": {
+      "lemma": "bétzu",
+      "varianti": [
+        "béciu"
+      ],
+      "gruppo": "modifier",
+      "consultato": "2026-11-22"
+    },
+    "togu": {
+      "lemma": "tògo, tògu",
+      "varianti": [],
+      "gruppo": "modifier",
+      "consultato": "2026-11-22"
+    },
+    "oi": {
+      "lemma": "òi",
+      "varianti": [
+        "òe"
+      ],
+      "gruppo": "modifier",
+      "consultato": "2026-11-22"
+    },
+    "cras": {
+      "lemma": "cràs",
+      "varianti": [
+        "incràs"
+      ],
+      "gruppo": "modifier",
+      "consultato": "2026-11-22"
+    },
+    "immui": {
+      "lemma": "immúi",
+      "varianti": [
+        "immòe"
+      ],
+      "gruppo": "modifier",
+      "consultato": "2026-11-22"
+    },
+    "sempri": {
+      "lemma": "sèmpri",
+      "varianti": [
+        "sèmpede"
+      ],
+      "gruppo": "modifier",
+      "consultato": "2026-11-22"
+    },
+    "totu": {
+      "lemma": "tótu",
+      "varianti": [],
+      "gruppo": "modifier",
+      "consultato": "2026-11-22"
+    },
+    "nudda": {
+      "lemma": "núdha",
+      "varianti": [
+        "nudha"
+      ],
+      "gruppo": "modifier",
+      "consultato": "2026-11-22"
+    },
+    "puru": {
+      "lemma": "púru",
+      "varianti": [],
+      "gruppo": "modifier",
+      "consultato": "2026-11-22"
+    },
+    "fintzas": {
+      "lemma": "fíntzas",
+      "varianti": [
+        "fínces"
+      ],
+      "gruppo": "modifier",
+      "consultato": "2026-11-22"
+    },
+    "chene": {
+      "lemma": "chène",
+      "varianti": [
+        "cèna 1"
+      ],
+      "gruppo": "modifier",
+      "consultato": "2026-11-22"
+    },
+    "cun": {
+      "lemma": "cun",
+      "varianti": [
+        "chin"
+      ],
+      "gruppo": "modifier",
+      "consultato": "2026-11-22"
+    },
+    "gratzias": {
+      "lemma": "gràtzia 1",
+      "varianti": [
+        "gràcia"
+      ],
+      "gruppo": "modifier",
+      "consultato": "2026-11-22"
+    },
+    "milli": {
+      "lemma": "mílli",
+      "varianti": [
+        "míla"
+      ],
+      "gruppo": "modifier",
+      "consultato": "2026-11-22"
+    },
+    "centu": {
+      "lemma": "céntu",
+      "varianti": [
+        "chentu"
+      ],
+      "gruppo": "modifier",
+      "consultato": "2026-11-22"
+    },
+    "tostau": {
+      "lemma": "tostàu",
+      "varianti": [
+        "tostàdu"
+      ],
+      "gruppo": "modifier",
+      "consultato": "2026-11-22"
+    },
+    "unu": {
+      "lemma": "únu",
+      "varianti": [],
+      "gruppo": "modifier",
+      "consultato": "2026-11-22"
+    },
+    "duus": {
+      "lemma": "dúus",
+      "varianti": [
+        "dúos"
+      ],
+      "gruppo": "modifier",
+      "consultato": "2026-11-22"
+    },
+    "tres": {
+      "lemma": "tres",
+      "varianti": [],
+      "gruppo": "modifier",
+      "consultato": "2026-11-22"
+    },
+    "cincu": {
+      "lemma": "cíncu",
+      "varianti": [],
+      "gruppo": "modifier",
+      "consultato": "2026-11-22"
+    },
+    "ses": {
+      "lemma": "ses",
+      "varianti": [],
+      "gruppo": "modifier",
+      "consultato": "2026-11-22"
+    },
+    "otu": {
+      "lemma": "òtu",
+      "varianti": [
+        "òto"
+      ],
+      "gruppo": "modifier",
+      "consultato": "2026-11-22"
+    },
+    "noi": {
+      "lemma": "nòi",
+      "varianti": [
+        "nòbe"
+      ],
+      "gruppo": "modifier",
+      "consultato": "2026-11-22"
+    },
+    "dexi": {
+      "lemma": "dèxi",
+      "varianti": [
+        "dèche"
+      ],
+      "gruppo": "modifier",
+      "consultato": "2026-11-22"
+    },
+    "bàtoro": {
+      "lemma": "bàtoro",
+      "varianti": [
+        "bàtero"
+      ],
+      "gruppo": "modifier",
+      "consultato": "2026-11-22"
+    },
+    "lunis": {
+      "lemma": "lúnis",
+      "varianti": [],
+      "gruppo": "noun",
+      "consultato": "2026-11-22"
+    },
+    "martis": {
+      "lemma": "màrtis",
+      "varianti": [
+        "màltis"
+      ],
+      "gruppo": "noun",
+      "consultato": "2026-11-22"
+    },
+    "sàbadu": {
+      "lemma": "sàbadu",
+      "varianti": [
+        "sàbudu",
+        "sàburu",
+        "sàpadu",
+        "sàpatu",
+        "sàuru"
+      ],
+      "gruppo": "noun",
+      "consultato": "2026-11-22"
+    },
+    "domíniga": {
+      "lemma": "domíniga",
+      "varianti": [
+        "domíga"
+      ],
+      "gruppo": "noun",
+      "consultato": "2026-11-22"
+    },
+    "prus": {
+      "lemma": "prus",
+      "varianti": [
+        "piús"
+      ],
+      "gruppo": "modifier",
+      "consultato": "2026-11-22"
+    },
+    "genti": {
+      "lemma": "gènte, gènti",
+      "varianti": [
+        "tzente",
+        "zente"
+      ],
+      "gruppo": "noun",
+      "consultato": "2026-11-22"
+    },
+    "caddu": {
+      "lemma": "càdhu",
+      "varianti": [
+        "cabàdhu"
+      ],
+      "gruppo": "noun",
+      "consultato": "2026-11-22"
+    },
+    "iscuru": {
+      "lemma": "iscúru",
+      "varianti": [
+        "scuru"
+      ],
+      "gruppo": "modifier",
+      "consultato": "2026-11-22"
+    },
+    "tardu": {
+      "lemma": "tàrdu",
+      "varianti": [
+        "tàldu"
+      ],
+      "gruppo": "modifier",
+      "consultato": "2026-11-22"
+    },
+    "fèsta": {
+      "lemma": "fèsta",
+      "varianti": [
+        "fèlta"
+      ],
+      "gruppo": "noun",
+      "consultato": "2026-11-22"
+    },
+    "mùsica": {
+      "lemma": "música",
+      "varianti": [
+        "músiga"
+      ],
+      "gruppo": "noun",
+      "consultato": "2026-11-22"
+    },
+    "pitzinnu": {
+      "lemma": "pitzínnu",
+      "varianti": [
+        "picínnu"
+      ],
+      "gruppo": "noun",
+      "consultato": "2026-11-22"
+    },
+    "tziu": {
+      "lemma": "tzíu",
+      "varianti": [
+        "ciu 2",
+        "siu",
+        "tiu"
+      ],
+      "gruppo": "noun",
+      "consultato": "2026-11-22"
+    },
+    "casteddu": {
+      "lemma": "castédhu",
+      "varianti": [],
+      "gruppo": "noun",
+      "consultato": "2026-11-22"
+    },
+    "pisci": {
+      "lemma": "písci",
+      "varianti": [
+        "písce"
+      ],
+      "gruppo": "noun",
+      "consultato": "2026-11-22"
+    },
+    "pretzisu": {
+      "lemma": "pretzísu",
+      "varianti": [
+        "pertzísu"
+      ],
+      "gruppo": "modifier",
+      "consultato": "2026-11-22"
+    },
+    "puddu": {
+      "lemma": "púdhu",
+      "varianti": [
+        "pudhitu"
+      ],
+      "gruppo": "noun",
+      "consultato": "2026-11-22"
+    },
+    "pìndula": {
+      "lemma": "píndula",
+      "varianti": [
+        "péndhula 1"
+      ],
+      "gruppo": "noun",
+      "consultato": "2026-11-22"
+    },
+    "númeru": {
+      "lemma": "númeru",
+      "varianti": [
+        "númunu"
+      ],
+      "gruppo": "noun",
+      "consultato": "2026-11-22"
+    },
+    "pratza": {
+      "lemma": "pràtza",
+      "varianti": [
+        "pàltza"
+      ],
+      "gruppo": "noun",
+      "consultato": "2026-11-22"
+    },
+    "sardu": {
+      "lemma": "sàrdu",
+      "varianti": [
+        "sàdru",
+        "sàldu 1"
+      ],
+      "gruppo": "modifier",
+      "consultato": "2026-11-22"
+    },
+    "custu": {
+      "lemma": "cústu",
+      "varianti": [
+        "cúste"
+      ],
+      "gruppo": "modifier",
+      "consultato": "2026-11-22"
+    }
+  },
+  "grammatica": [
+    "su",
+    "sa",
+    "s",
+    "is",
+    "a",
+    "de",
+    "in",
+    "cun",
+    "e",
+    "no",
+    "est",
+    "sunt"
+  ],
+  "nomi_propri": [
+    "Puxeddu",
+    "Pusceddu",
+    "Nuxis",
+    "Nuscis",
+    "Maxia",
+    "Mòguru",
+    "Casteddu",
+    "Sardigna"
+  ],
+  "flessioni": [
+    "domos",
+    "pitzinnos",
+    "fueddos",
+    "annos",
+    "dies",
+    "pìndulas",
+    "sarda",
+    "bella",
+    "manna",
+    "iscura",
+    "betza",
+    "tosta",
+    "una"
+  ],
+  "lettere": [
+    "x",
+    "sc"
+  ]
+}

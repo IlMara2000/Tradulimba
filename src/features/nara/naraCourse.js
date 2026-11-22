@@ -353,6 +353,39 @@ const LEVELS = [
       },
     ],
   },
+  {
+    id: 'campidanesu',
+    title: 'Su campidanesu',
+    objective: 'Passa dal sardo LSC alle forme campidanesi verificate della base TraduLimba.',
+    icon: 'languages',
+    color: 'green',
+    questions: [
+      {
+        prompt: 'In campidanese, come si dice “mangiare”?',
+        options: ['Papai', 'Mandigare', 'Bufai'],
+        answer: 0,
+        note: 'Papai viene dal lemma papàre; mandigare è la forma LSC, bufai vale “bere”.',
+      },
+      {
+        prompt: 'In campidanese “puru” corrisponde al LSC…',
+        options: ['Fìntzas', 'Meda', 'Pagu'],
+        answer: 0,
+        note: 'Puru e fintzas valgono “anche”; meda è “molto” e pagu è “poco”.',
+      },
+      {
+        prompt: 'Quale forma campidanese corrisponde a “strada”?',
+        options: ['Istràda', 'Pratza', 'Porta'],
+        answer: 0,
+        note: 'Istràda è attestata sul dizionario; “camina” non esiste ed è l’errore da non ripetere.',
+      },
+      {
+        prompt: 'Che giorno della settimana è “chenàbura”?',
+        options: ['Mercoledì', 'Venerdì', 'Domenica'],
+        answer: 1,
+        note: 'Chenàbura è il venerdì; mércuris è mercoledì e giòbia è giovedì.',
+      },
+    ],
+  },
 ]
 
 export const NARA_LEVELS = LEVELS.map((level, levelIndex) => ({

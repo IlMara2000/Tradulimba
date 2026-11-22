@@ -9,6 +9,7 @@ export const NARA_LEVEL_IDS = [
   'inditos',
   'verbos',
   'dialogu',
+  'campidanesu',
 ]
 
 export const NARA_LEVEL_COUNT = NARA_LEVEL_IDS.length
