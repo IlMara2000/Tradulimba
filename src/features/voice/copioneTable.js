@@ -58,6 +58,16 @@ export const renderGroupTable = (copione, groupId = DEFAULT_TABLE_GROUP, options
   return renderMarkdownTable(rowsOf(group), options)
 }
 
+const blockBounds = (markdown, groupId) => {
+  const start = markerStart(groupId)
+  const startIndex = markdown.indexOf(start)
+  if (startIndex === -1) return null
+  const afterStart = startIndex + start.length
+  const endIndex = markdown.indexOf(markerEnd(groupId), afterStart)
+  if (endIndex === -1) return null
+  return { afterStart, endIndex }
+}
+
 /**
  * Contenuto del blocco, senza i marcatori e senza spazi ai bordi.
  * @param {string} markdown
@@ -65,14 +75,8 @@ export const renderGroupTable = (copione, groupId = DEFAULT_TABLE_GROUP, options
  * @returns {string | null}
  */
 export const extractBlock = (markdown, groupId = DEFAULT_TABLE_GROUP) => {
-  const start = markerStart(groupId)
-  const end = markerEnd(groupId)
-  const startIndex = markdown.indexOf(start)
-  if (startIndex === -1) return null
-  const afterStart = startIndex + start.length
-  const endIndex = markdown.indexOf(end, afterStart)
-  if (endIndex === -1) return null
-  return markdown.slice(afterStart, endIndex).trim()
+  const bounds = blockBounds(markdown, groupId)
+  return bounds ? markdown.slice(bounds.afterStart, bounds.endIndex).trim() : null
 }
 
 /**
@@ -83,18 +87,11 @@ export const extractBlock = (markdown, groupId = DEFAULT_TABLE_GROUP) => {
  * @returns {string}
  */
 export const replaceBlock = (markdown, groupId, table) => {
-  const start = markerStart(groupId)
-  const end = markerEnd(groupId)
-  const startIndex = markdown.indexOf(start)
-  if (startIndex === -1) {
-    throw new Error(`Marcatore iniziale mancante per ${groupId}: ${start}`)
+  const bounds = blockBounds(markdown, groupId)
+  if (!bounds) {
+    throw new Error(`Marcatori mancanti per ${groupId}: ${markerStart(groupId)} … ${markerEnd(groupId)}`)
   }
-  const afterStart = startIndex + start.length
-  const endIndex = markdown.indexOf(end, afterStart)
-  if (endIndex === -1) {
-    throw new Error(`Marcatore finale mancante per ${groupId}: ${end}`)
-  }
-  return `${markdown.slice(0, afterStart)}\n${table.trimEnd()}\n${markdown.slice(endIndex)}`
+  return `${markdown.slice(0, bounds.afterStart)}\n${table.trimEnd()}\n${markdown.slice(bounds.endIndex)}`
 }
 
 /**

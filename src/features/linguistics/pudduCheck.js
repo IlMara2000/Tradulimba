@@ -73,6 +73,14 @@ export const lemmaParts = (raw) => String(raw || '')
   .filter(Boolean)
 
 /**
+ * Pagina senza lemma: assente o errore.
+ * @param {'absent' | 'error'} status
+ * @param {string | null} reason
+ * @returns {PudduPage}
+ */
+const emptyPage = (status, reason) => ({ status, lemma: null, variants: [], raw: null, reason })
+
+/**
  * Interpreta la pagina restituita dal dizionario.
  * @param {string} html
  * @returns {PudduPage}
@@ -81,7 +89,7 @@ export const parsePudduPage = (html) => {
   const page = typeof html === 'string' ? html : ''
 
   if (/whoops/iu.test(page) || /there was an error/iu.test(page)) {
-    return { status: 'error', lemma: null, variants: [], raw: null, reason: 'errore del dizionario' }
+    return emptyPage('error', 'errore del dizionario')
   }
 
   const match = page.match(LEMMA_STRONG)
@@ -89,16 +97,16 @@ export const parsePudduPage = (html) => {
     const text = decodeEntities(match[1].replace(/<[^>]*>/gu, ' ')).replace(/\s+/gu, ' ').trim()
     const parts = lemmaParts(text)
     if (parts.length === 0) {
-      return { status: 'error', lemma: null, variants: [], raw: null, reason: 'lemma vuoto' }
+      return emptyPage('error', 'lemma vuoto')
     }
     return { status: 'found', lemma: parts[0], variants: parts.slice(1), raw: text, reason: null }
   }
 
   if (/non\s+trovata/iu.test(page)) {
-    return { status: 'absent', lemma: null, variants: [], raw: null, reason: null }
+    return emptyPage('absent', null)
   }
 
-  return { status: 'error', lemma: null, variants: [], raw: null, reason: 'pagina non riconosciuta' }
+  return emptyPage('error', 'pagina non riconosciuta')
 }
 
 /**
@@ -118,12 +126,12 @@ export const pudduUrl = (form) => `${PUDDU_BASE}/${encodeURIComponent(String(for
 export const checkPudduForm = async (form, options = {}) => {
   const clean = String(form || '').trim()
   if (!clean) {
-    return { form: clean, status: 'error', lemma: null, variants: [], raw: null, reason: 'forma vuota' }
+    return { form: clean, ...emptyPage('error', 'forma vuota') }
   }
 
   const fetchImpl = options.fetchImpl || globalThis.fetch
   if (typeof fetchImpl !== 'function') {
-    return { form: clean, status: 'error', lemma: null, variants: [], raw: null, reason: 'fetch non disponibile' }
+    return { form: clean, ...emptyPage('error', 'fetch non disponibile') }
   }
 
   let response
@@ -131,18 +139,11 @@ export const checkPudduForm = async (form, options = {}) => {
     response = await fetchImpl(pudduUrl(clean), { method: 'POST', signal: options.signal })
   } catch (error) {
     const message = error instanceof Error ? error.message : String(error)
-    return { form: clean, status: 'error', lemma: null, variants: [], raw: null, reason: `rete: ${message}` }
+    return { form: clean, ...emptyPage('error', `rete: ${message}`) }
   }
 
   if (!response || response.ok !== true) {
-    return {
-      form: clean,
-      status: 'error',
-      lemma: null,
-      variants: [],
-      raw: null,
-      reason: `HTTP ${response?.status ?? 'sconosciuto'}`,
-    }
+    return { form: clean, ...emptyPage('error', `HTTP ${response?.status ?? 'sconosciuto'}`) }
   }
 
   let html
@@ -150,7 +151,7 @@ export const checkPudduForm = async (form, options = {}) => {
     html = await response.text()
   } catch (error) {
     const message = error instanceof Error ? error.message : String(error)
-    return { form: clean, status: 'error', lemma: null, variants: [], raw: null, reason: `lettura: ${message}` }
+    return { form: clean, ...emptyPage('error', `lettura: ${message}`) }
   }
 
   return { form: clean, ...parsePudduPage(html) }
@@ -246,9 +247,6 @@ export const buildSnapshotUpdate = (snapshot, results, options = {}) => {
     }
     if (previous?.gruppo) entry.gruppo = previous.gruppo
     entry.consultato = today
-    for (const [key, value] of Object.entries(previous || {})) {
-      if (!(key in entry)) entry[key] = value
-    }
 
     lemmi[form] = entry
     changes.push({ form, action: previous ? 'updated' : 'added', lemma: entry.lemma })

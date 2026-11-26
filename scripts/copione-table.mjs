@@ -18,7 +18,6 @@ import {
   DEFAULT_TABLE_GROUP,
   extractBlock,
   groupById,
-  isBlockCurrent,
   replaceBlock,
   renderMarkdownTable,
   rowsOf,
@@ -87,7 +86,7 @@ const main = () => {
   const markdown = readFileSync(options.doc, 'utf8')
 
   if (options.check) {
-    if (isBlockCurrent(markdown, copione, options.group)) {
+    if (extractBlock(markdown, options.group) === table.trim()) {
       console.log(`OK: ${path.relative(ROOT, options.doc)} è allineato al gruppo ${options.group}.`)
       return 0
     }

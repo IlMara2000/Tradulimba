@@ -16,6 +16,7 @@ import { readFileSync, writeFileSync } from 'node:fs'
 import path from 'node:path'
 import { createInterface } from 'node:readline/promises'
 import {
+  PUDDU_BASE,
   buildSnapshotUpdate,
   checkPudduForm,
   formatResult,
@@ -27,7 +28,6 @@ const CONCURRENCY = 4
 const SNAPSHOT = path.resolve(
   process.env.PUDDU_SNAPSHOT || path.join(process.cwd(), 'data/puddu-lemmi.json'),
 )
-const BASE = 'https://ditzionariu.nor-web.eu/it/faeddu'
 
 const printHelp = () => {
   console.log(`Uso: npm run puddu:check -- [opzioni] <forma> [forma ...]
@@ -45,7 +45,7 @@ Senza argomenti legge le forme da stdin. Per esempio:
 }
 
 const args = process.argv.slice(2)
-const forms = []
+const inputs = []
 let filePath = null
 let strict = false
 let update = false
@@ -74,46 +74,41 @@ for (let index = 0; index < args.length; index += 1) {
     console.error(`Opzione non riconosciuta: ${arg}`)
     process.exit(2)
   } else {
-    forms.push(...parseForms(arg))
+    inputs.push(arg)
   }
 }
 
 if (filePath) {
   try {
-    forms.push(...parseForms(readFileSync(filePath, 'utf8')))
+    inputs.push(readFileSync(filePath, 'utf8'))
   } catch (error) {
     console.error(`Non riesco a leggere ${filePath}: ${error.message}`)
     process.exit(2)
   }
 }
 
-if (forms.length === 0 && !process.stdin.isTTY) {
+if (inputs.length === 0 && !process.stdin.isTTY) {
   const chunks = []
   for await (const chunk of process.stdin) chunks.push(chunk)
-  forms.push(...parseForms(Buffer.concat(chunks).toString('utf8')))
+  inputs.push(Buffer.concat(chunks).toString('utf8'))
 }
 
-const unique = []
-const seen = new Set()
-for (const form of forms) {
-  const key = form.normalize('NFC').toLocaleLowerCase('it')
-  if (seen.has(key)) continue
-  seen.add(key)
-  unique.push(form)
-}
+// parseForms legge righe e virgole e scarta i duplicati: una sola passata su
+// tutto l'input, invece di deduplicare di nuovo dopo.
+const forms = parseForms(inputs.join('\n'))
 
-if (unique.length === 0) {
+if (forms.length === 0) {
   printHelp()
   process.exit(2)
 }
 
-console.log(`Ditzionàriu in Línia: ${unique.length} forme da controllare`)
-console.log(`Fonte: ${BASE}/<forma>`)
+console.log(`Ditzionàriu in Línia: ${forms.length} forme da controllare`)
+console.log(`Fonte: ${PUDDU_BASE}/<forma>`)
 console.log('')
 
 const results = []
-for (let start = 0; start < unique.length; start += CONCURRENCY) {
-  const batch = unique.slice(start, start + CONCURRENCY)
+for (let start = 0; start < forms.length; start += CONCURRENCY) {
+  const batch = forms.slice(start, start + CONCURRENCY)
   const batchResults = await Promise.all(batch.map((form) => checkPudduForm(form)))
   for (const result of batchResults) {
     results.push(result)
@@ -121,10 +116,8 @@ for (let start = 0; start < unique.length; start += CONCURRENCY) {
   }
 }
 
-const counts = results.reduce((totals, result) => {
-  totals[result.status] += 1
-  return totals
-}, { found: 0, absent: 0, error: 0 })
+const counts = { found: 0, absent: 0, error: 0 }
+for (const result of results) counts[result.status] += 1
 
 console.log('')
 console.log(`Riepilogo: ${counts.found} con lemma, ${counts.absent} assenti, ${counts.error} non verificabili.`)
