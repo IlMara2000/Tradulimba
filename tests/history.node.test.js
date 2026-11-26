@@ -33,6 +33,20 @@ test('aggiorna una voce duplicata senza ripristinare copie obsolete', () => {
   assert.equal(next[0].output, 'Bonas dies')
 })
 
+test('conserva una traduzione con una lingua facoltativa', () => {
+  const normalized = normalizeHistory([{
+    ...validEntry,
+    id: 'eng',
+    input: 'Hello',
+    output: 'Ciao',
+    source: 'eng',
+    target: 'ita',
+  }])
+  assert.equal(normalized.length, 1)
+  assert.equal(normalized[0].source, 'eng')
+  assert.equal(normalized[0].target, 'ita')
+})
+
 test('storage non disponibile o non valido non interrompe la pagina', () => {
   const storage = {
     getItem: () => '[null,{"input":42}]',

@@ -1,9 +1,10 @@
+import { isLanguageCode } from './languagePacks.js'
+
 export const TRANSLATION_HISTORY_KEY = 'tradulimba:history:v1'
 
 const MAX_HISTORY_ITEMS = 8
 const MAX_INPUT_LENGTH = 4000
 const MAX_OUTPUT_LENGTH = 8000
-const LANGUAGES = new Set(['ita', 'srd'])
 const VARIANTS = new Set(['lsc', 'campidanese', 'logudorese'])
 
 const cleanText = (value, maximum) => (
@@ -15,8 +16,8 @@ export const normalizeHistoryEntry = (value) => {
 
   const input = cleanText(value.input, MAX_INPUT_LENGTH)
   const output = cleanText(value.output, MAX_OUTPUT_LENGTH)
-  const source = LANGUAGES.has(value.source) ? value.source : ''
-  const target = LANGUAGES.has(value.target) ? value.target : ''
+  const source = isLanguageCode(value.source) ? value.source : ''
+  const target = isLanguageCode(value.target) ? value.target : ''
   const variant = VARIANTS.has(value.variant) ? value.variant : 'lsc'
 
   if (!input || !output || !source || !target || source === target) return null

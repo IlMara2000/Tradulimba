@@ -21,6 +21,7 @@ import {
 } from 'lucide-react'
 import NaraPromo from './components/NaraPromo'
 import LanguageGuide from './components/LanguageGuide'
+import LanguagePacks from './components/LanguagePacks'
 import PronunciationPanel from './components/PronunciationPanel'
 import {
   addTranslationHistoryEntry,
@@ -28,6 +29,13 @@ import {
   saveTranslationHistory,
 } from './features/translation/history'
 import { buildSpeechScript } from './features/translation/speechScript.js'
+import {
+  languageHtmlTag,
+  languageLabel,
+  loadInstalledLanguages,
+  saveInstalledLanguages,
+  setLanguageInstalled,
+} from './features/translation/languagePacks.js'
 import { analyzeSardinian } from './features/linguistics/index.js'
 import { fetchEngineVoice, loadVoiceManifest } from './features/voice/client.js'
 import { selectCorpusEntry } from './features/voice/corpus.js'
@@ -38,11 +46,6 @@ const NaraGame = lazy(loadNaraGame)
 
 const MAX_CHARACTERS = 4000
 const MAX_SPEECH_CHARACTERS = 1000
-
-const LANGUAGE_LABELS = {
-  ita: 'Italiano',
-  srd: 'Sardu',
-}
 
 const VARIANTS = [
   { id: 'lsc', short: 'Sardu comune', label: 'Limba Sarda Comuna', note: 'Standard scritto' },
@@ -68,16 +71,17 @@ const browserSpeech = (text, language, variant, onEnd, onError) => {
   // fonetica: i grafemi sardi non arrivano più al motore con le regole italiane.
   const spoken = language === 'srd' ? buildSpeechScript(text, variant) : text
   const utterance = new SpeechSynthesisUtterance(spoken)
-  utterance.lang = 'it-IT'
+  const voicePrefix = language === 'srd' ? 'it' : languageHtmlTag(language)
+  utterance.lang = language === 'srd' ? 'it-IT' : languageHtmlTag(language)
   utterance.rate = language === 'srd' ? 0.86 : 0.94
   utterance.pitch = variant === 'campidanese' ? 1.03 : 0.98
   utterance.onend = onEnd
   utterance.onerror = onError
 
-  const italianVoice = window.speechSynthesis
+  const matchingVoice = window.speechSynthesis
     .getVoices()
-    .find((voice) => voice.lang?.toLowerCase().startsWith('it'))
-  if (italianVoice) utterance.voice = italianVoice
+    .find((voice) => voice.lang?.toLowerCase().startsWith(voicePrefix))
+  if (matchingVoice) utterance.voice = matchingVoice
 
   window.speechSynthesis.speak(utterance)
   return utterance
@@ -97,26 +101,48 @@ function BrandMark({ compact = false }) {
   )
 }
 
-function LanguageSwitch({ source, target, onSwap }) {
+function LanguageSwitch({ source, target, languages, onChange, onSwap, onManage }) {
+  const options = (side) => languages
+    .filter((code) => code !== (side === 'source' ? target : source))
+    .map((code) => <option key={code} value={code}>{languageLabel(code)}</option>)
+
   return (
     <div className="language-switch" aria-label="Lingue della traduzione">
       <div className="language-switch__side">
         <span className="eyebrow">Da</span>
-        <strong>{LANGUAGE_LABELS[source]}</strong>
+        <select
+          className="language-switch__select"
+          value={source}
+          onChange={(event) => onChange('source', event.target.value)}
+          aria-label="Lingua di partenza"
+        >
+          {options('source')}
+        </select>
       </div>
       <button
         type="button"
         className="swap-button"
         onClick={onSwap}
-        aria-label="Scambia italiano e sardo"
+        aria-label="Scambia le lingue"
         title="Scambia lingue"
       >
         <ArrowRightLeft size={20} strokeWidth={2.1} />
       </button>
       <div className="language-switch__side language-switch__side--right">
         <span className="eyebrow">A</span>
-        <strong>{LANGUAGE_LABELS[target]}</strong>
+        <select
+          className="language-switch__select"
+          value={target}
+          onChange={(event) => onChange('target', event.target.value)}
+          aria-label="Lingua di arrivo"
+        >
+          {options('target')}
+        </select>
       </div>
+      <button type="button" className="language-manage" onClick={onManage}>
+        <Languages size={16} />
+        Lingue
+      </button>
     </div>
   )
 }
@@ -137,6 +163,8 @@ function App() {
   const [copied, setCopied] = useState(false)
   const [history, setHistory] = useState(loadTranslationHistory)
   const [showInfo, setShowInfo] = useState(false)
+  const [showLanguagePacks, setShowLanguagePacks] = useState(false)
+  const [installedLanguages, setInstalledLanguages] = useState(loadInstalledLanguages)
   const [showGame, setShowGame] = useState(false)
   const requestRef = useRef(null)
   const requestSequenceRef = useRef(0)
@@ -151,12 +179,14 @@ function App() {
 
   const isLoading = status === 'loading'
   const resultVariantLabel = useMemo(() => {
-    if (output && resultMeta?.variantApplied === false) {
+    if (!output) return ''
+    if (source !== 'srd' && target !== 'srd') return resultMeta?.engine || 'Traduzione AI'
+    if (resultMeta?.variantApplied === false) {
       return target === 'srd' ? 'LSC · fallback' : 'Da LSC · fallback'
     }
     const effectiveVariant = getVariant(resultMeta?.effectiveVariant || variant)
     return target === 'srd' ? effectiveVariant.short : `Da ${effectiveVariant.short}`
-  }, [output, resultMeta, target, variant])
+  }, [output, resultMeta, source, target, variant])
 
   // Un termine del glossario può non comparire nel risultato: la forma
   // preferita resta visibile come divergenza da verificare.
@@ -175,6 +205,8 @@ function App() {
     requestRef.current?.abort()
     requestRef.current = null
   }, [])
+
+  const closeLanguagePacks = useCallback(() => setShowLanguagePacks(false), [])
 
   const stopPlayback = useCallback(() => {
     voiceSequenceRef.current += 1
@@ -308,10 +340,11 @@ function App() {
         }))
         .filter((item) => item.term && item.translation)
 
+      const hasSardinian = activeSource === 'srd' || activeTarget === 'srd'
       const sardoText = activeTarget === 'srd' ? translatedText : text
       const analysis = data.analysis && Array.isArray(data.analysis.words)
         ? data.analysis
-        : analyzeSardinian(sardoText, { variant: effectiveVariant })
+        : (hasSardinian ? analyzeSardinian(sardoText, { variant: effectiveVariant }) : null)
       const orthographyFixes = (Array.isArray(data.orthography) ? data.orthography : [])
         .slice(0, 6)
         .filter((fix) => fix && typeof fix.rule === 'string')
@@ -359,14 +392,16 @@ function App() {
   const swapLanguages = () => {
     const hasResult = Boolean(output)
     const swappedVariant = hasResult ? resultMeta?.effectiveVariant || variant : variant
+    const nextSource = target
     const nextTarget = source
+    const hasSardinian = nextSource === 'srd' || nextTarget === 'srd'
     const nextInput = output || input
     const nextOutput = output ? input : ''
     const sardoText = nextTarget === 'srd' ? nextOutput : nextInput
     cancelTranslation()
     stopPlayback()
-    setSource(target)
-    setTarget(source)
+    setSource(nextSource)
+    setTarget(nextTarget)
     setInput(nextInput)
     setOutput(nextOutput)
     if (hasResult) setVariant(swappedVariant)
@@ -375,7 +410,7 @@ function App() {
       effectiveVariant: swappedVariant,
       variantApplied: resultMeta?.variantApplied !== false,
       engine: resultMeta?.engine || '',
-      analysis: analyzeSardinian(sardoText, { variant: swappedVariant }),
+      analysis: hasSardinian ? analyzeSardinian(sardoText, { variant: swappedVariant }) : null,
       analysisSide: nextTarget === 'srd' ? 'target' : 'source',
       orthographyFixes: [],
     } : null)
@@ -504,7 +539,7 @@ function App() {
     setVoiceSource('dispositivo')
     setAudioNotice(reason || (language === 'srd'
       ? 'Voce del dispositivo attiva: la trascrizione fonetica approssima la pronuncia sarda.'
-      : 'Voce italiana del dispositivo attiva.'))
+      : `Voce del dispositivo attiva (${languageLabel(language)}).`))
     return true
   }
 
@@ -640,9 +675,11 @@ function App() {
       effectiveVariant: item.effectiveVariant,
       variantApplied: item.variantApplied,
       engine: item.engine,
-      analysis: analyzeSardinian(item.target === 'srd' ? item.output : item.input, {
-        variant: item.effectiveVariant,
-      }),
+      analysis: item.source === 'srd' || item.target === 'srd'
+        ? analyzeSardinian(item.target === 'srd' ? item.output : item.input, {
+          variant: item.effectiveVariant,
+        })
+        : null,
       analysisSide: item.target === 'srd' ? 'target' : 'source',
       orthographyFixes: [],
     })
@@ -657,6 +694,43 @@ function App() {
     if (!window.confirm('Vuoi eliminare tutte le traduzioni salvate su questo dispositivo?')) return
     setHistory([])
     saveTranslationHistory([])
+  }
+
+  const changeLanguage = (side, code) => {
+    cancelTranslation()
+    stopPlayback()
+    if (side === 'source') setSource(code)
+    else setTarget(code)
+    setOutput('')
+    setResultMeta(null)
+    setStatus('idle')
+    setError('')
+    setTranslationNotice('')
+    setAudioNotice('')
+  }
+
+  const installLanguage = (code) => {
+    const next = setLanguageInstalled(installedLanguages, code, true)
+    setInstalledLanguages(next)
+    saveInstalledLanguages(next)
+  }
+
+  const uninstallLanguage = (code) => {
+    const next = setLanguageInstalled(installedLanguages, code, false)
+    setInstalledLanguages(next)
+    saveInstalledLanguages(next)
+    if (next.includes(source) && next.includes(target)) return
+
+    cancelTranslation()
+    stopPlayback()
+    if (!next.includes(source)) setSource('ita')
+    if (!next.includes(target)) setTarget('srd')
+    setOutput('')
+    setResultMeta(null)
+    setStatus('idle')
+    setError('')
+    setTranslationNotice('')
+    setAudioNotice('')
   }
 
   const selectVariant = (variantId) => {
@@ -743,9 +817,16 @@ function App() {
 
         <section id="traduttore" className="translator-wrap" aria-label="Traduttore italiano sardo" tabIndex={-1}>
           <div className="translator-card">
-            <LanguageSwitch source={source} target={target} onSwap={swapLanguages} />
+            <LanguageSwitch
+              source={source}
+              target={target}
+              languages={installedLanguages}
+              onChange={changeLanguage}
+              onSwap={swapLanguages}
+              onManage={() => setShowLanguagePacks(true)}
+            />
 
-            <div className="variant-bar">
+            <div className={`variant-bar${source === 'srd' || target === 'srd' ? '' : ' is-hidden'}`}>
               <div className="variant-bar__label">
                 <MapPinned size={18} />
                 <span>Quale sardo vuoi usare?</span>
@@ -775,7 +856,7 @@ function App() {
             <div className="translation-panels">
               <section className="text-panel text-panel--source">
                 <div className="text-panel__heading">
-                  <span>{LANGUAGE_LABELS[source]}</span>
+                  <span>{languageLabel(source)}</span>
                   <div className="text-panel__tools">
                     <button type="button" onClick={pasteText} title="Incolla dagli appunti">
                       <Clipboard size={17} />
@@ -810,8 +891,8 @@ function App() {
                     }
                   }}
                   placeholder="Scrivi o incolla un testo…"
-                  aria-label={`Testo in ${LANGUAGE_LABELS[source]}`}
-                  lang={source === 'srd' ? 'sc' : 'it'}
+                  aria-label={`Testo in ${languageLabel(source)}`}
+                  lang={languageHtmlTag(source)}
                 />
                 <div className="text-panel__footer">
                   <span className="character-count">{input.length.toLocaleString('it-IT')} / {MAX_CHARACTERS.toLocaleString('it-IT')}</span>
@@ -821,10 +902,10 @@ function App() {
 
               <section className="text-panel text-panel--result" aria-live="polite" aria-busy={isLoading}>
                 <div className="text-panel__heading">
-                  <span>{LANGUAGE_LABELS[target]}</span>
+                  <span>{languageLabel(target)}</span>
                   <span className="result-variant">{resultVariantLabel}</span>
                 </div>
-                <div className={`translation-output${!output ? ' is-empty' : ''}`} lang={output && target === 'srd' ? 'sc' : 'it'}>
+                <div className={`translation-output${!output ? ' is-empty' : ''}`} lang={languageHtmlTag(target)}>
                   {isLoading ? (
                     <div className="loading-copy">
                       <LoaderCircle className="spin" size={25} />
@@ -859,9 +940,9 @@ function App() {
                             ? (item.note || 'Forma del glossario presente nel risultato.')
                             : 'La forma del glossario non compare nel risultato: verificala con un parlante.'}
                         >
-                          <span lang={source === 'srd' ? 'sc' : 'it'}>{item.term}</span>
+                          <span lang={languageHtmlTag(source)}>{item.term}</span>
                           <ArrowRightLeft size={11} aria-hidden="true" />
-                          <strong lang={source === 'srd' ? 'it' : 'sc'}>{item.translation}</strong>
+                          <strong lang={languageHtmlTag(target)}>{item.translation}</strong>
                         </li>
                       ))}
                     </ul>
@@ -936,11 +1017,13 @@ function App() {
               {history.slice(0, 4).map((item) => (
                 <button type="button" className="history-card" key={item.id} onClick={() => restoreHistory(item)}>
                   <span className="history-card__route">
-                    {LANGUAGE_LABELS[item.source]} <ArrowRightLeft size={13} /> {LANGUAGE_LABELS[item.target]}
+                    {languageLabel(item.source)} <ArrowRightLeft size={13} /> {languageLabel(item.target)}
                   </span>
-                  <strong lang={item.source === 'srd' ? 'sc' : 'it'}>{item.input}</strong>
-                  <p lang={item.target === 'srd' ? 'sc' : 'it'}>{item.output}</p>
-                  <small>{item.variantApplied === false ? 'Sardu comune · fallback' : getVariant(item.effectiveVariant).short}</small>
+                  <strong lang={languageHtmlTag(item.source)}>{item.input}</strong>
+                  <p lang={languageHtmlTag(item.target)}>{item.output}</p>
+                  <small>{item.source === 'srd' || item.target === 'srd'
+                    ? (item.variantApplied === false ? 'Sardu comune · fallback' : getVariant(item.effectiveVariant).short)
+                    : (item.engine || 'Traduzione AI')}</small>
                 </button>
               ))}
             </div>
@@ -1020,7 +1103,8 @@ function App() {
             <h3>Come viene trattato il testo</h3>
             <p>
               Per tradurre, il contenuto viene inviato ad Apertium; gli adattamenti di varietà e la voce
-              possono usare Vercel AI Gateway e il relativo fornitore AI. TraduLimba non richiede un account
+              possono usare Vercel AI Gateway e il relativo fornitore AI. Le lingue extra installate passano
+              dal fornitore AI: senza un gateway configurato non traducono. TraduLimba non richiede un account
               e salva nel browser soltanto cronologia e progressi NARA. Non inserire dati personali o sensibili.
             </p>
             <div className="modal-note">
@@ -1031,6 +1115,14 @@ function App() {
           </section>
         </div>
       )}
+
+      <LanguagePacks
+        open={showLanguagePacks}
+        installed={installedLanguages}
+        onInstall={installLanguage}
+        onUninstall={uninstallLanguage}
+        onClose={closeLanguagePacks}
+      />
     </div>
   )
 }

@@ -4,6 +4,7 @@ import {
   MAX_TRANSLATION_CHARACTERS,
   normalizeTranslationInput,
   translateText,
+  translationRoute,
   TranslatorError,
 } from '../api/_translator.js'
 import {
@@ -190,4 +191,122 @@ test('usa il singleton Gateway per OIDC e una chiave statica solo se esplicita',
   assert.strictEqual(resolveGatewayProvider({ VERCEL: '1' }), gateway)
   assert.strictEqual(resolveGatewayProvider({ VERCEL_OIDC_TOKEN: 'token-temporaneo' }), gateway)
   assert.notStrictEqual(resolveGatewayProvider({ AI_GATEWAY_API_KEY: 'chiave-esplicita' }), gateway)
+})
+
+test('instrada italiano-sardo su Apertium e le altre lingue su AI', () => {
+  assert.equal(translationRoute('ita', 'srd'), 'apertium')
+  assert.equal(translationRoute('srd', 'ita'), 'apertium')
+  assert.equal(translationRoute('eng', 'srd'), 'pivot-srd-in')
+  assert.equal(translationRoute('srd', 'eng'), 'pivot-srd-out')
+  assert.equal(translationRoute('eng', 'ita'), 'ai')
+  assert.equal(translationRoute('eng', 'spa'), 'ai')
+})
+
+test('accetta le lingue installabili e ignora la variante fuori dal sardo', () => {
+  assert.deepEqual(
+    normalizeTranslationInput({ text: 'Hello', source: 'eng', target: 'srd', variant: 'campidanese' }),
+    { text: 'Hello', source: 'eng', target: 'srd', variant: 'campidanese' },
+  )
+  assert.deepEqual(
+    normalizeTranslationInput({ text: 'Hello', source: 'eng', target: 'ita', variant: 'campidanese' }),
+    { text: 'Hello', source: 'eng', target: 'ita', variant: 'lsc' },
+  )
+  assert.throws(
+    () => normalizeTranslationInput({ text: 'Hello', source: 'eng', target: 'xyz' }),
+    /direzione di traduzione/i,
+  )
+})
+
+test('traduce tra lingue facoltative con il gateway AI', async () => {
+  const result = await translateText(
+    { text: 'Hello', source: 'eng', target: 'ita' },
+    { AI_GATEWAY_API_KEY: 'test' },
+    {
+      translateWithAI: async ({ text, source, target }) => {
+        assert.equal(text, 'Hello')
+        assert.equal(source, 'eng')
+        assert.equal(target, 'ita')
+        return 'Ciao'
+      },
+    },
+  )
+
+  assert.equal(result.translation, 'Ciao')
+  assert.equal(result.method, 'ai')
+  assert.equal(result.analysis, null)
+  assert.equal(result.source, 'eng')
+  assert.equal(result.target, 'ita')
+  assert.equal(result.glossary.length, 0)
+})
+
+test('senza gateway AI una lingua facoltativa restituisce un errore esplicito', async () => {
+  await assert.rejects(
+    () => translateText({ text: 'Hello', source: 'eng', target: 'ita' }, {}),
+    (error) => error instanceof TranslatorError && error.code === 'AI_NOT_CONFIGURED',
+  )
+})
+
+test('porta l’inglese al sardo passando dall’italiano', async () => {
+  const originalFetch = globalThis.fetch
+  globalThis.fetch = async () => new Response(
+    JSON.stringify({ responseData: { translatedText: 'Bona die' } }),
+    { status: 200, headers: { 'Content-Type': 'application/json' } },
+  )
+
+  try {
+    const result = await translateText(
+      { text: 'Good morning', source: 'eng', target: 'srd', variant: 'lsc' },
+      { AI_GATEWAY_API_KEY: 'test' },
+      {
+        translateWithAI: async ({ text, source, target }) => {
+          assert.equal(text, 'Good morning')
+          assert.equal(source, 'eng')
+          assert.equal(target, 'ita')
+          return 'Buongiorno'
+        },
+      },
+    )
+
+    assert.equal(result.translation, 'Bona die')
+    assert.equal(result.source, 'eng')
+    assert.equal(result.target, 'srd')
+    assert.equal(result.method, 'ai+apertium')
+    assert.equal(result.analysisSide, 'target')
+    assert.equal(result.analysis.words[0].word, 'Bona')
+  } finally {
+    globalThis.fetch = originalFetch
+  }
+})
+
+test('porta il sardo all’inglese passando dall’italiano', async () => {
+  const originalFetch = globalThis.fetch
+  globalThis.fetch = async () => new Response(
+    JSON.stringify({ responseData: { translatedText: 'Buongiorno' } }),
+    { status: 200, headers: { 'Content-Type': 'application/json' } },
+  )
+
+  try {
+    const result = await translateText(
+      { text: 'Bona die', source: 'srd', target: 'eng', variant: 'lsc' },
+      { AI_GATEWAY_API_KEY: 'test' },
+      {
+        translateWithAI: async ({ text, source, target }) => {
+          assert.equal(text, 'Buongiorno')
+          assert.equal(source, 'ita')
+          assert.equal(target, 'eng')
+          return 'Good morning'
+        },
+      },
+    )
+
+    assert.equal(result.translation, 'Good morning')
+    assert.equal(result.source, 'srd')
+    assert.equal(result.target, 'eng')
+    assert.equal(result.method, 'apertium+ai')
+    assert.equal(result.analysisSide, 'source')
+    assert.equal(result.analysis.words[0].word, 'Bona')
+    assert.equal(result.glossary.length, 0)
+  } finally {
+    globalThis.fetch = originalFetch
+  }
 })
