@@ -22,7 +22,6 @@ import {
   checkPudduForm,
   formatResult,
   formatUpdatePreview,
-  lexiconWarnings,
   parseForms,
 } from '../src/features/linguistics/pudduCheck.js'
 
@@ -126,7 +125,7 @@ console.log(`Riepilogo: ${counts.found} con lemma, ${counts.absent} assenti, ${c
 
 if (update) {
   const current = JSON.parse(readFileSync(SNAPSHOT, 'utf8'))
-  const built = buildSnapshotUpdate(current, results)
+  const built = buildSnapshotUpdate(current, results, { entries: CAMPIDANESE_ENTRIES })
 
   if (built.changes.length === 0) {
     console.log('')
@@ -136,11 +135,10 @@ if (update) {
     console.log('Modifiche allo snapshot:')
     console.log(formatUpdatePreview(built))
 
-    const warnings = lexiconWarnings(built.snapshot, built.changes, CAMPIDANESE_ENTRIES)
-    if (warnings.length > 0) {
+    if (built.warnings.length > 0) {
       console.log('')
       console.log('Avvisi (npm run lexicon:verify potrebbe fallire):')
-      for (const warning of warnings) console.log(`! ${warning}`)
+      for (const warning of built.warnings) console.log(`! ${warning}`)
     }
     console.log('')
 

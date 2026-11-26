@@ -6,7 +6,6 @@ import {
   formatResult,
   formatUpdatePreview,
   lemmaParts,
-  lexiconWarnings,
   parseForms,
   parsePudduPage,
   pudduUrl,
@@ -197,6 +196,7 @@ test('l’anteprima distingue aggiunte, aggiornamenti e forme saltate', () => {
 
 test('avvisa quando il lemma del dizionario differisce da quello del lessico', () => {
   const snapshot = {
+    consultato: '2026-01-01',
     lemmi: {
       bidda: { lemma: 'bídha', varianti: ['vidha'] },
       traballu: { lemma: 'trabàlliu, trabàllu', varianti: [] },
@@ -205,17 +205,22 @@ test('avvisa quando il lemma del dizionario differisce da quello del lessico', (
   const entries = [
     { srd: 'bidda', lemma: 'bídha', variants: ['vidha'] },
     { srd: 'traballu', lemma: 'trabàlliu', variants: ['trabàllu'] },
-    { srd: 'abba', lemma: 'àbba', variants: ['àcua'] },
+  ]
+  /** @type {any[]} */
+  const results = [
+    { form: 'bidda', status: 'found', lemma: 'bídha', variants: [], raw: 'bídha', reason: null },
+    { form: 'traballu', status: 'found', lemma: 'trabàlliu', variants: ['trabàllu'], raw: 'trabàlliu, trabàllu', reason: null },
   ]
 
-  assert.deepEqual(
-    lexiconWarnings(snapshot, [{ form: 'bidda' }], entries),
-    [],
-    'lemma e varianti uguali non devono produrre avvisi',
-  )
-  assert.deepEqual(lexiconWarnings(snapshot, [{ form: 'traballu' }], entries), [
+  const built = buildSnapshotUpdate(snapshot, results, { today: '2026-11-26', entries })
+  assert.deepEqual(built.warnings, [
     'traballu: il dizionario dice «trabàlliu, trabàllu», il lessico ha «trabàlliu»',
     'traballu: varianti del lessico assenti dallo snapshot: trabàllu',
   ])
-  assert.deepEqual(lexiconWarnings(snapshot, [{ form: 'inesistente' }], entries), [])
+
+  assert.deepEqual(
+    buildSnapshotUpdate(snapshot, results, { today: '2026-11-26' }).warnings,
+    [],
+    'senza lessico non ci sono avvisi',
+  )
 })

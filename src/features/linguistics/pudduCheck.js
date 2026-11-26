@@ -57,7 +57,7 @@ const ENTITIES = {
  * @param {string} text
  * @returns {string}
  */
-export const decodeEntities = (text) => String(text)
+const decodeEntities = (text) => String(text)
   .replace(/&(?:nbsp|amp|lt|gt|quot|apos|#39);/gu, (entity) => ENTITIES[entity] ?? entity)
   .replace(/&#x([0-9a-f]+);/giu, (_, hex) => String.fromCodePoint(Number.parseInt(hex, 16)))
   .replace(/&#(\d+);/gu, (_, decimal) => String.fromCodePoint(Number(decimal)))
@@ -209,7 +209,7 @@ export const formatResult = (result) => {
  * @param {{ action: 'added' | 'updated', form: string, lemma: string }} change
  * @returns {string}
  */
-export const formatSnapshotChange = (change) => (
+const formatSnapshotChange = (change) => (
   `${change.action === 'added' ? '+' : '~'} ${change.form}: lemma ${change.lemma}`
 )
 
@@ -217,13 +217,15 @@ export const formatSnapshotChange = (change) => (
  * Applica i risultati trovati a una copia dello snapshot. Non rimuove nulla:
  * le forme assenti o non verificabili finiscono in `skipped` e restano com'erano.
  * Conserva gruppo e varianti già curati a mano; aggiunge `consultato` a oggi.
+ * Con `entries` (il lessico) restituisce anche gli avvisi sui lemmi divergenti.
  * @param {any} snapshot
  * @param {PudduResult[]} results
- * @param {{ today?: string }} [options]
+ * @param {{ today?: string, entries?: Array<{ srd: string, lemma: string, variants?: string[] }> }} [options]
  * @returns {{
  *   snapshot: any,
  *   changes: Array<{ form: string, action: 'added' | 'updated', lemma: string }>,
  *   skipped: Array<{ form: string, status: string, reason: string | null }>,
+ *   warnings: string[],
  * }}
  */
 export const buildSnapshotUpdate = (snapshot, results, options = {}) => {
@@ -262,6 +264,7 @@ export const buildSnapshotUpdate = (snapshot, results, options = {}) => {
     },
     changes,
     skipped,
+    warnings: lexiconWarnings({ ...snapshot, lemmi }, changes, options.entries),
   }
 }
 
@@ -290,7 +293,7 @@ export const formatUpdatePreview = ({ changes, skipped }) => {
  * @param {Array<{ srd: string, lemma: string, variants?: string[] }>} entries
  * @returns {string[]}
  */
-export const lexiconWarnings = (snapshot, changes, entries) => {
+function lexiconWarnings(snapshot, changes, entries) {
   const byForm = new Map(
     (Array.isArray(entries) ? entries : []).map((entry) => [normalizeLexeme(entry.srd), entry]),
   )
@@ -298,8 +301,9 @@ export const lexiconWarnings = (snapshot, changes, entries) => {
 
   for (const change of Array.isArray(changes) ? changes : []) {
     const entry = byForm.get(normalizeLexeme(change.form))
-    const saved = entry ? snapshot?.lemmi?.[change.form] : null
-    if (!entry || !saved) continue
+    if (!entry) continue
+    const saved = snapshot?.lemmi?.[change.form]
+    if (!saved) continue
 
     if (normalizeLexeme(saved.lemma) !== normalizeLexeme(entry.lemma)) {
       warnings.push(`${change.form}: il dizionario dice «${saved.lemma}», il lessico ha «${entry.lemma}»`)
