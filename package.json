@@ -22,7 +22,8 @@
         "voice:record": "node scripts/voice-recorder.mjs",
                 "voice:report": "node scripts/voice-report.mjs",
         "icon:generate": "python3 scripts/generate-icons.py",
-        "lexicon:verify": "node scripts/lexicon-verify.mjs"
+        "lexicon:verify": "node scripts/lexicon-verify.mjs",
+        "puddu:check": "node scripts/puddu-check.mjs"
       },
     "dependencies": {
         "@ai-sdk/gateway": "^4.0.74",
