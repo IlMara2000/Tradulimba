@@ -4,15 +4,29 @@
 //   npm run puddu:check -- manèra matessi iscriiri
 //   npm run puddu:check -- --file forme.txt
 //   cat forme.txt | npm run puddu:check
+//   npm run puddu:check -- --update manèra matessi
 //
 // Per ogni forma stampa il lemma con le varianti, «assente» se il dizionario
 // non la registra, o «non verificabile» se la pagina non è interpretabile.
+// Con --update aggiorna data/puddu-lemmi.json dopo conferma esplicita; --yes
+// salta la domanda (solo per contesti non interattivi già autorizzati).
 // Va in rete: non fa parte di npm test (il test copre il parsing offline).
 
-import { readFileSync } from 'node:fs'
-import { checkPudduForm, formatResult, parseForms } from '../src/features/linguistics/pudduCheck.js'
+import { readFileSync, writeFileSync } from 'node:fs'
+import path from 'node:path'
+import { createInterface } from 'node:readline/promises'
+import {
+  buildSnapshotUpdate,
+  checkPudduForm,
+  formatResult,
+  formatUpdatePreview,
+  parseForms,
+} from '../src/features/linguistics/pudduCheck.js'
 
 const CONCURRENCY = 4
+const SNAPSHOT = path.resolve(
+  process.env.PUDDU_SNAPSHOT || path.join(process.cwd(), 'data/puddu-lemmi.json'),
+)
 const BASE = 'https://ditzionariu.nor-web.eu/it/faeddu'
 
 const printHelp = () => {
@@ -20,6 +34,8 @@ const printHelp = () => {
 
 Opzioni:
   -f, --file <percorso>  legge le forme da un file (una per riga, # commenta)
+      --update           aggiorna data/puddu-lemmi.json con le forme trovate
+      --yes              non chiede conferma (solo con --update)
       --strict           esce con codice 1 se una forma è assente o non verificabile
   -h, --help             mostra questo messaggio
 
@@ -32,6 +48,8 @@ const args = process.argv.slice(2)
 const forms = []
 let filePath = null
 let strict = false
+let update = false
+let assumeYes = false
 
 for (let index = 0; index < args.length; index += 1) {
   const arg = args[index]
@@ -45,6 +63,10 @@ for (let index = 0; index < args.length; index += 1) {
     index += 1
   } else if (arg === '--strict') {
     strict = true
+  } else if (arg === '--update') {
+    update = true
+  } else if (arg === '--yes' || arg === '-y') {
+    assumeYes = true
   } else if (arg === '-h' || arg === '--help') {
     printHelp()
     process.exit(0)
@@ -107,6 +129,41 @@ const counts = results.reduce((totals, result) => {
 console.log('')
 console.log(`Riepilogo: ${counts.found} con lemma, ${counts.absent} assenti, ${counts.error} non verificabili.`)
 
-if (strict && (counts.absent > 0 || counts.error > 0)) {
+if (update) {
+  const current = JSON.parse(readFileSync(SNAPSHOT, 'utf8'))
+  const built = buildSnapshotUpdate(current, results)
+
+  if (built.changes.length === 0) {
+    console.log('')
+    console.log('Nessuna forma da aggiornare nello snapshot.')
+  } else {
+    console.log('')
+    console.log('Modifiche allo snapshot:')
+    console.log(formatUpdatePreview(built))
+    console.log('')
+
+    let confirmed = assumeYes
+    if (!confirmed) {
+      if (!process.stdin.isTTY) {
+        console.error('Serve --yes per aggiornare lo snapshot in un contesto non interattivo.')
+        process.exit(2)
+      }
+      const readline = createInterface({ input: process.stdin, output: process.stdout })
+      const answer = await readline.question(`Scrivere ${path.relative(process.cwd(), SNAPSHOT)}? [s/N] `)
+      readline.close()
+      confirmed = /^(s|si|sì|y|yes)$/iu.test(answer.trim())
+    }
+
+    if (!confirmed) {
+      console.log('Nessun file modificato.')
+    } else {
+      writeFileSync(SNAPSHOT, `${JSON.stringify(built.snapshot, null, 2)}\n`, 'utf8')
+      console.log(`Aggiornato ${path.relative(process.cwd(), SNAPSHOT)}: ${built.changes.length} voci.`)
+      console.log('Ricorda: npm run lexicon:verify')
+    }
+  }
+}
+
+if (!update && strict && (counts.absent > 0 || counts.error > 0)) {
   process.exitCode = 1
 }

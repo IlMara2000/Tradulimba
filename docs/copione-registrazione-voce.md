@@ -248,56 +248,58 @@ restano coperte sono x/j, sc, tz, dd e le vocali toniche.
 
 Frasi (`campidanese-frasi`), in ordine, 48 righe:
 
-```text
-Puxeddu est unu fueddu de sa bidda.
-Nuxis est una bidda de sa Sardigna.
-Nuscis e Nuxis sunt duus fueddos.
-Sa genti de Nuxis est in fèsta.
-Maxia est unu fueddu de sa limba sarda.
-Sa x de Puxeddu no est sa sc de Pusceddu.
-In iscola su maistru est unu òmini de Nuxis.
-Su sardu de Nuxis est in su ditzionàriu.
-S'iscola de sa bidda est manna.
-Su ditzionàriu est in s'iscola.
-Custu est su ditzionàriu de sa limba sarda.
-Su pitzinnu est in s'iscola.
-Is pitzinnos sunt in s'iscola.
-Su maistru de s'iscola est cun is pitzinnos.
-Gratzias meda, sa limba sarda est bella.
-Su chelu est iscuru immui.
-Sa bidda est in su monti.
-Su caddu est in sa bidda.
-Su caddu est mannu e bellu.
-Sa bidda de su monti est manna.
-Milli e centu annos sunt meda.
-Custu est s'annu de sa fèsta.
-Su pipiu est piticu, su caddu est mannu.
-Mércuris, giòbia e chenàbura sunt dies de sa cida.
-Oi est mércuris.
-Cras est giòbia.
-A mangianu su chelu est bellu.
-A sero sa bidda est iscura.
-Unu, duus, tres, bàtoro, cincu.
-Ses, otu, noi, dexi.
-Lunis, martis, mércuris, giòbia, chenàbura.
-Sàbadu e domíniga sunt dies de fèsta.
-Su pani est in sa domo.
-Su binu est in sa domo.
-S'abba est in sa domo.
-Su pani e su binu sunt in sa domo.
-Sa domo de sa bidda est betza.
-S'òmini e sa fèmina sunt in domo.
-Su pipiu e sa mama sunt in domo.
-Sa mùsica de sa fèsta est in sa bidda.
-Torrai a domo est bellu.
-Immui sa mùsica est in sa bidda.
-Sa terra de sa bidda est manna e bella.
-Su monti e su mari sunt in sa terra sarda.
-Totu is pitzinnos sunt in s'iscola.
-Su pipiu est in domo chene sa mama.
-Sa dimanda de su pitzinnu est tosta.
-Chene agiudu sa faddina est tosta puru.
-```
+<!-- copione-table:campidanese-frasi:start -->
+| # | Frase |
+| --- | --- |
+| 1 | Puxeddu est unu fueddu de sa bidda. |
+| 2 | Nuxis est una bidda de sa Sardigna. |
+| 3 | Nuscis e Nuxis sunt duus fueddos. |
+| 4 | Sa genti de Nuxis est in fèsta. |
+| 5 | Maxia est unu fueddu de sa limba sarda. |
+| 6 | Sa x de Puxeddu no est sa sc de Pusceddu. |
+| 7 | In iscola su maistru est unu òmini de Nuxis. |
+| 8 | Su sardu de Nuxis est in su ditzionàriu. |
+| 9 | S'iscola de sa bidda est manna. |
+| 10 | Su ditzionàriu est in s'iscola. |
+| 11 | Custu est su ditzionàriu de sa limba sarda. |
+| 12 | Su pitzinnu est in s'iscola. |
+| 13 | Is pitzinnos sunt in s'iscola. |
+| 14 | Su maistru de s'iscola est cun is pitzinnos. |
+| 15 | Gratzias meda, sa limba sarda est bella. |
+| 16 | Su chelu est iscuru immui. |
+| 17 | Sa bidda est in su monti. |
+| 18 | Su caddu est in sa bidda. |
+| 19 | Su caddu est mannu e bellu. |
+| 20 | Sa bidda de su monti est manna. |
+| 21 | Milli e centu annos sunt meda. |
+| 22 | Custu est s'annu de sa fèsta. |
+| 23 | Su pipiu est piticu, su caddu est mannu. |
+| 24 | Mércuris, giòbia e chenàbura sunt dies de sa cida. |
+| 25 | Oi est mércuris. |
+| 26 | Cras est giòbia. |
+| 27 | A mangianu su chelu est bellu. |
+| 28 | A sero sa bidda est iscura. |
+| 29 | Unu, duus, tres, bàtoro, cincu. |
+| 30 | Ses, otu, noi, dexi. |
+| 31 | Lunis, martis, mércuris, giòbia, chenàbura. |
+| 32 | Sàbadu e domíniga sunt dies de fèsta. |
+| 33 | Su pani est in sa domo. |
+| 34 | Su binu est in sa domo. |
+| 35 | S'abba est in sa domo. |
+| 36 | Su pani e su binu sunt in sa domo. |
+| 37 | Sa domo de sa bidda est betza. |
+| 38 | S'òmini e sa fèmina sunt in domo. |
+| 39 | Su pipiu e sa mama sunt in domo. |
+| 40 | Sa mùsica de sa fèsta est in sa bidda. |
+| 41 | Torrai a domo est bellu. |
+| 42 | Immui sa mùsica est in sa bidda. |
+| 43 | Sa terra de sa bidda est manna e bella. |
+| 44 | Su monti e su mari sunt in sa terra sarda. |
+| 45 | Totu is pitzinnos sunt in s'iscola. |
+| 46 | Su pipiu est in domo chene sa mama. |
+| 47 | Sa dimanda de su pitzinnu est tosta. |
+| 48 | Chene agiudu sa faddina est tosta puru. |
+<!-- copione-table:campidanese-frasi:end -->
 
 **Revisione del 22 novembre 2026.** Le frasi sono state ripassate una per una
 sul *Ditzionàriu in Línia*: ogni parola di contenuto ora ha un lemma attestato.

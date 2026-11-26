@@ -1,8 +1,10 @@
 import assert from 'node:assert/strict'
 import test from 'node:test'
 import {
+  buildSnapshotUpdate,
   checkPudduForm,
   formatResult,
+  formatUpdatePreview,
   lemmaParts,
   parseForms,
   parsePudduPage,
@@ -20,12 +22,14 @@ test('legge il lemma e le varianti dalla pagina del dizionario', () => {
     status: 'found',
     lemma: 'matéssi',
     variants: ['matéssiu'],
+    raw: 'matéssi, matéssiu',
     reason: null,
   })
   assert.deepEqual(parsePudduPage(FOUND_ONE), {
     status: 'found',
     lemma: 'manèra',
     variants: [],
+    raw: 'manèra',
     reason: null,
   })
 })
@@ -35,6 +39,7 @@ test('legge anche un lemma con numero di omonimia', () => {
     status: 'found',
     lemma: 'mercàtu',
     variants: ['mercàu'],
+    raw: 'mercàtu 1, mercàu',
     reason: null,
   })
 })
@@ -74,19 +79,19 @@ test('costruisce un URL codificato', () => {
 
 test('formatta i tre esiti', () => {
   assert.equal(
-    formatResult({ form: 'matessi', status: 'found', lemma: 'matéssi', variants: ['matéssiu'], reason: null }),
+    formatResult({ form: 'matessi', status: 'found', lemma: 'matéssi', variants: ['matéssiu'], raw: 'matéssi, matéssiu', reason: null }),
     'matessi: lemma matéssi (varianti: matéssiu)',
   )
   assert.equal(
-    formatResult({ form: 'manèra', status: 'found', lemma: 'manèra', variants: [], reason: null }),
+    formatResult({ form: 'manèra', status: 'found', lemma: 'manèra', variants: [], raw: 'manèra', reason: null }),
     'manèra: lemma manèra',
   )
   assert.equal(
-    formatResult({ form: 'pronuntziant', status: 'absent', lemma: null, variants: [], reason: null }),
+    formatResult({ form: 'pronuntziant', status: 'absent', lemma: null, variants: [], raw: null, reason: null }),
     'pronuntziant: assente («non trovata»)',
   )
   assert.equal(
-    formatResult({ form: "s'agatat", status: 'error', lemma: null, variants: [], reason: 'errore del dizionario' }),
+    formatResult({ form: "s'agatat", status: 'error', lemma: null, variants: [], raw: null, reason: 'errore del dizionario' }),
     "s'agatat: non verificabile (errore del dizionario)",
   )
 })
@@ -104,6 +109,7 @@ test('interroga il dizionario con un fetch iniettato', async () => {
     status: 'found',
     lemma: 'matéssi',
     variants: ['matéssiu'],
+    raw: 'matéssi, matéssiu',
     reason: null,
   })
   assert.deepEqual(calls, [{
@@ -128,4 +134,62 @@ test('un errore HTTP o di rete non fa cadere il controllo', async () => {
   const empty = await checkPudduForm('', { fetchImpl: async () => ({ ok: true, status: 200, text: async () => '' }) })
   assert.equal(empty.status, 'error')
   assert.match(empty.reason, /forma vuota/)
+})
+
+test('aggiorna lo snapshot solo con le forme trovate, senza rimuovere nulla', () => {
+  const snapshot = {
+    fonte: 'Puddu',
+    consultato: '2026-01-01',
+    nota: 'prova',
+    lemmi: {
+      bidda: { lemma: 'bídha', varianti: ['vidha'], gruppo: 'noun', consultato: '2026-01-01' },
+    },
+  }
+  /** @type {any[]} */
+  const results = [
+    { form: 'bidda', status: 'found', lemma: 'bídha', variants: [], raw: 'bídha', reason: null },
+    { form: 'matessi', status: 'found', lemma: 'matéssi', variants: ['matéssiu'], raw: 'matéssi, matéssiu', reason: null },
+    { form: 'pronuntziant', status: 'absent', lemma: null, variants: [], raw: null, reason: null },
+    { form: "s'agatat", status: 'error', lemma: null, variants: [], raw: null, reason: 'errore del dizionario' },
+  ]
+
+  const built = buildSnapshotUpdate(snapshot, results, { today: '2026-11-26' })
+
+  assert.equal(built.snapshot.consultato, '2026-11-26')
+  assert.deepEqual(built.snapshot.lemmi.bidda, {
+    lemma: 'bídha',
+    varianti: ['vidha'],
+    gruppo: 'noun',
+    consultato: '2026-11-26',
+  })
+  assert.deepEqual(built.snapshot.lemmi.matessi, {
+    lemma: 'matéssi, matéssiu',
+    varianti: [],
+    consultato: '2026-11-26',
+  })
+  assert.equal(built.snapshot.lemmi.pronuntziant, undefined)
+  assert.equal(built.snapshot.lemmi["s'agatat"], undefined)
+  assert.deepEqual(built.changes.map(({ form, action }) => ({ form, action })), [
+    { form: 'bidda', action: 'updated' },
+    { form: 'matessi', action: 'added' },
+  ])
+  assert.deepEqual(built.skipped.map(({ form }) => form), ['pronuntziant', "s'agatat"])
+  // Lo snapshot di partenza non viene mutato.
+  assert.equal(snapshot.lemmi.bidda.consultato, '2026-01-01')
+  assert.equal(snapshot.lemmi.matessi, undefined)
+})
+
+test('l’anteprima distingue aggiunte, aggiornamenti e forme saltate', () => {
+  const preview = formatUpdatePreview({
+    changes: [
+      { form: 'bidda', action: 'updated', lemma: 'bídha' },
+      { form: 'matessi', action: 'added', lemma: 'matéssi, matéssiu' },
+    ],
+    skipped: [{ form: 'pronuntziant', status: 'absent', reason: null }],
+  })
+  assert.equal(preview, [
+    '~ bidda: lemma bídha',
+    '+ matessi: lemma matéssi, matéssiu',
+    '= pronuntziant: assente',
+  ].join('\n'))
 })
