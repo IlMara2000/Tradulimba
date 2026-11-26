@@ -3,6 +3,7 @@ import test from 'node:test'
 import {
   buildSnapshotUpdate,
   checkPudduForm,
+  compareSnapshotLemmas,
   formatResult,
   formatUpdatePreview,
   lemmaParts,
@@ -118,6 +119,19 @@ test('interroga il dizionario con un fetch iniettato', async () => {
   }])
 })
 
+test('interrompe una richiesta che non risponde', async () => {
+  /** @type {any} */
+  const fetchImpl = (url, init) => new Promise((resolve, reject) => {
+    const signal = init?.signal
+    assert.ok(signal, 'il timeout deve passare un AbortSignal')
+    signal.addEventListener('abort', () => reject(new Error('aborted')), { once: true })
+  })
+
+  const result = await checkPudduForm('x', { fetchImpl, timeoutMs: 10 })
+  assert.equal(result.status, 'error')
+  assert.match(result.reason, /rete: aborted/)
+})
+
 test('un errore HTTP o di rete non fa cadere il controllo', async () => {
   const httpError = await checkPudduForm('x', {
     fetchImpl: async () => ({ ok: false, status: 503, text: async () => '' }),
@@ -223,4 +237,33 @@ test('avvisa quando il lemma del dizionario differisce da quello del lessico', (
     [],
     'senza lessico non ci sono avvisi',
   )
+})
+
+test('confronta i lemmi dello snapshot con il dizionario', () => {
+  const snapshot = {
+    lemmi: {
+      bidda: { lemma: 'bídha' },
+      matessi: { lemma: 'matéssi, matéssiu' },
+      bufai: { lemma: 'bufài, bufàe' },
+      pudda: { lemma: 'púdha' },
+      funt: { lemma: 'funt' },
+      "s'agatat": { lemma: "s'agatat" },
+    },
+  }
+  /** @type {any[]} */
+  const results = [
+    { form: 'bidda', status: 'found', lemma: 'bídha', variants: [], raw: 'bídha', reason: null },
+    { form: 'matessi', status: 'found', lemma: 'matéssi', variants: ['matéssiu'], raw: 'matéssi, matéssiu', reason: null },
+    { form: 'bufai', status: 'found', lemma: 'bufàe', variants: ['bufài'], raw: 'bufàe, bufài', reason: null },
+    { form: 'pudda', status: 'found', lemma: 'púda', variants: [], raw: 'púda', reason: null },
+    { form: 'funt', status: 'absent', lemma: null, variants: [], raw: null, reason: null },
+    { form: "s'agatat", status: 'error', lemma: null, variants: [], raw: null, reason: 'errore del dizionario' },
+    { form: 'ignoto', status: 'found', lemma: 'x', variants: [], raw: 'x', reason: null },
+  ]
+
+  const comparison = compareSnapshotLemmas(snapshot, results)
+  assert.equal(comparison.matched, 3, 'l’ordine delle varianti non conta')
+  assert.deepEqual(comparison.changed, [{ form: 'pudda', expected: 'púdha', actual: 'púda' }])
+  assert.deepEqual(comparison.absent, ['funt'])
+  assert.deepEqual(comparison.errors, [{ form: "s'agatat", reason: 'errore del dizionario' }])
 })

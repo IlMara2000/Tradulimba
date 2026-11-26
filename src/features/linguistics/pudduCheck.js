@@ -13,6 +13,7 @@ import { normalizeLexeme } from './lexiconAudit.js'
 
 export const PUDDU_BASE = 'https://ditzionariu.nor-web.eu/it/faeddu'
 
+const DEFAULT_TIMEOUT_MS = 15000
 const LEMMA_STRONG = /<strong\s+style="font-size:\s*large;"\s*>([\s\S]*?)<\/strong>/u
 
 /**
@@ -121,8 +122,10 @@ export const pudduUrl = (form) => `${PUDDU_BASE}/${encodeURIComponent(String(for
 
 /**
  * Interroga il dizionario per una forma. Il fetch è iniettabile per i test.
+ * Con il fetch reale ogni richiesta ha un timeout, altrimenti una pagina lenta
+ * bloccherebbe l'intero --check.
  * @param {string} form
- * @param {{ fetchImpl?: FetchLike, signal?: AbortSignal }} [options]
+ * @param {{ fetchImpl?: FetchLike, signal?: AbortSignal, timeoutMs?: number }} [options]
  * @returns {Promise<PudduResult>}
  */
 export const checkPudduForm = async (form, options = {}) => {
@@ -136,9 +139,14 @@ export const checkPudduForm = async (form, options = {}) => {
     return { form: clean, ...emptyPage('error', 'fetch non disponibile') }
   }
 
+  // Il timeout vale per il fetch reale; i test che iniettano fetchImpl non
+  // devono lasciare timer accesi, salvo timeoutMs esplicito.
+  const timeoutMs = options.timeoutMs ?? (options.fetchImpl ? 0 : DEFAULT_TIMEOUT_MS)
+  const signal = options.signal || (timeoutMs > 0 ? AbortSignal.timeout(timeoutMs) : undefined)
+
   let response
   try {
-    response = await fetchImpl(pudduUrl(clean), { method: 'POST', signal: options.signal })
+    response = await fetchImpl(pudduUrl(clean), { method: 'POST', signal })
   } catch (error) {
     const message = error instanceof Error ? error.message : String(error)
     return { form: clean, ...emptyPage('error', `rete: ${message}`) }
@@ -317,4 +325,58 @@ function lexiconWarnings(snapshot, changes, entries) {
   }
 
   return warnings
+}
+
+const lemmaForms = (text) => lemmaParts(text).map((part) => normalizeLexeme(part)).sort()
+
+/**
+ * Due lemmi coincidono se hanno le stesse forme: l'ordine delle varianti non
+ * conta («bufài, bufàe» e «bufàe, bufài» sono lo stesso lemma).
+ * @param {string | null | undefined} left
+ * @param {string | null | undefined} right
+ * @returns {boolean}
+ */
+const sameLemma = (left, right) => {
+  const a = lemmaForms(left)
+  const b = lemmaForms(right)
+  return a.length === b.length && a.every((form, index) => form === b[index])
+}
+
+/**
+ * Confronta i risultati del dizionario con i lemmi dello snapshot. Non scrive
+ * nulla: serve a --check per vedere un cambio del dizionario prima di un
+ * --update. Le forme non presenti nello snapshot vengono ignorate.
+ * @param {any} snapshot
+ * @param {PudduResult[]} results
+ * @returns {{
+ *   matched: number,
+ *   changed: Array<{ form: string, expected: string, actual: string }>,
+ *   absent: string[],
+ *   errors: Array<{ form: string, reason: string | null }>,
+ * }}
+ */
+export const compareSnapshotLemmas = (snapshot, results) => {
+  const changed = []
+  const absent = []
+  const errors = []
+  let matched = 0
+
+  for (const result of Array.isArray(results) ? results : []) {
+    const form = typeof result?.form === 'string' ? result.form.trim() : ''
+    if (!form) continue
+    const entry = snapshot?.lemmi?.[form]
+    if (!entry) continue
+
+    if (result.status === 'absent') {
+      absent.push(form)
+    } else if (result.status === 'error') {
+      errors.push({ form, reason: result.reason ?? null })
+    } else if (sameLemma(result.raw, entry.lemma)) {
+      matched += 1
+    } else {
+      changed.push({ form, expected: entry.lemma, actual: result.raw })
+    }
+  }
+
+  return { matched, changed, absent, errors }
 }
