@@ -9,6 +9,8 @@
 // «non trovata»; una forma che il sito non riesce a gestire (per esempio con
 // apostrofo) restituisce una pagina «Whoops! There was an error.».
 
+import { normalizeLexeme } from './lexiconAudit.js'
+
 export const PUDDU_BASE = 'https://ditzionariu.nor-web.eu/it/faeddu'
 
 const LEMMA_STRONG = /<strong\s+style="font-size:\s*large;"\s*>([\s\S]*?)<\/strong>/u
@@ -277,4 +279,38 @@ export const formatUpdatePreview = ({ changes, skipped }) => {
     lines.push(`= ${skip.form}: ${skip.status === 'absent' ? 'assente' : `non verificabile (${skip.reason ?? skip.status})`}`)
   }
   return lines.join('\n')
+}
+
+/**
+ * Avvisi per le forme del lessico i cui dati non coincidono con lo snapshot
+ * aggiornato. Riproduce i controlli di lexicon:verify, così un lemma o una
+ * variante diversi non rompono l'audit in silenzio dopo --update.
+ * @param {any} snapshot
+ * @param {Array<{ form: string }>} changes
+ * @param {Array<{ srd: string, lemma: string, variants?: string[] }>} entries
+ * @returns {string[]}
+ */
+export const lexiconWarnings = (snapshot, changes, entries) => {
+  const byForm = new Map(
+    (Array.isArray(entries) ? entries : []).map((entry) => [normalizeLexeme(entry.srd), entry]),
+  )
+  const warnings = []
+
+  for (const change of Array.isArray(changes) ? changes : []) {
+    const entry = byForm.get(normalizeLexeme(change.form))
+    const saved = entry ? snapshot?.lemmi?.[change.form] : null
+    if (!entry || !saved) continue
+
+    if (normalizeLexeme(saved.lemma) !== normalizeLexeme(entry.lemma)) {
+      warnings.push(`${change.form}: il dizionario dice «${saved.lemma}», il lessico ha «${entry.lemma}»`)
+    }
+
+    const savedVariants = new Set((saved.varianti || []).map(normalizeLexeme))
+    const missing = (entry.variants || []).filter((variant) => !savedVariants.has(normalizeLexeme(variant)))
+    if (missing.length > 0) {
+      warnings.push(`${change.form}: varianti del lessico assenti dallo snapshot: ${missing.join(', ')}`)
+    }
+  }
+
+  return warnings
 }

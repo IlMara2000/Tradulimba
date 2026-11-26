@@ -15,12 +15,14 @@
 import { readFileSync, writeFileSync } from 'node:fs'
 import path from 'node:path'
 import { createInterface } from 'node:readline/promises'
+import { CAMPIDANESE_ENTRIES } from '../src/features/linguistics/campidaneseLexicon.js'
 import {
   PUDDU_BASE,
   buildSnapshotUpdate,
   checkPudduForm,
   formatResult,
   formatUpdatePreview,
+  lexiconWarnings,
   parseForms,
 } from '../src/features/linguistics/pudduCheck.js'
 
@@ -133,6 +135,13 @@ if (update) {
     console.log('')
     console.log('Modifiche allo snapshot:')
     console.log(formatUpdatePreview(built))
+
+    const warnings = lexiconWarnings(built.snapshot, built.changes, CAMPIDANESE_ENTRIES)
+    if (warnings.length > 0) {
+      console.log('')
+      console.log('Avvisi (npm run lexicon:verify potrebbe fallire):')
+      for (const warning of warnings) console.log(`! ${warning}`)
+    }
     console.log('')
 
     let confirmed = assumeYes

@@ -6,6 +6,7 @@ import {
   formatResult,
   formatUpdatePreview,
   lemmaParts,
+  lexiconWarnings,
   parseForms,
   parsePudduPage,
   pudduUrl,
@@ -192,4 +193,29 @@ test('l’anteprima distingue aggiunte, aggiornamenti e forme saltate', () => {
     '+ matessi: lemma matéssi, matéssiu',
     '= pronuntziant: assente',
   ].join('\n'))
+})
+
+test('avvisa quando il lemma del dizionario differisce da quello del lessico', () => {
+  const snapshot = {
+    lemmi: {
+      bidda: { lemma: 'bídha', varianti: ['vidha'] },
+      traballu: { lemma: 'trabàlliu, trabàllu', varianti: [] },
+    },
+  }
+  const entries = [
+    { srd: 'bidda', lemma: 'bídha', variants: ['vidha'] },
+    { srd: 'traballu', lemma: 'trabàlliu', variants: ['trabàllu'] },
+    { srd: 'abba', lemma: 'àbba', variants: ['àcua'] },
+  ]
+
+  assert.deepEqual(
+    lexiconWarnings(snapshot, [{ form: 'bidda' }], entries),
+    [],
+    'lemma e varianti uguali non devono produrre avvisi',
+  )
+  assert.deepEqual(lexiconWarnings(snapshot, [{ form: 'traballu' }], entries), [
+    'traballu: il dizionario dice «trabàlliu, trabàllu», il lessico ha «trabàlliu»',
+    'traballu: varianti del lessico assenti dallo snapshot: trabàllu',
+  ])
+  assert.deepEqual(lexiconWarnings(snapshot, [{ form: 'inesistente' }], entries), [])
 })

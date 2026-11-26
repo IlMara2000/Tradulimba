@@ -1,6 +1,6 @@
 {
   "fonte": "Ditzionàriu in Línia (Puddu) — ditzionariu.nor-web.eu",
-  "consultato": "2026-11-22",
+  "consultato": "2026-11-26",
   "nota": "Solo lemmi controllati a mano, uno per uno, sul dizionario. Il campo lemma è la forma accentata del dizionario (notazione lessicografica), la chiave è la grafia della norma sarda. Le sezioni grammatica, nomi_propri, flessioni e lettere non sono lemmi: sono forme ammesse nel copione che il dizionario non registra come voci.",
   "lemmi": {
     "bufai": {
@@ -842,7 +842,7 @@
       "lemma": "castédhu",
       "varianti": [],
       "gruppo": "noun",
-      "consultato": "2026-11-22"
+      "consultato": "2026-11-26"
     },
     "pisci": {
       "lemma": "písci",
@@ -866,7 +866,7 @@
         "pudhitu"
       ],
       "gruppo": "noun",
-      "consultato": "2026-11-22"
+      "consultato": "2026-11-26"
     },
     "pìndula": {
       "lemma": "píndula",
@@ -908,6 +908,196 @@
       ],
       "gruppo": "modifier",
       "consultato": "2026-11-22"
+    },
+    "matessi": {
+      "lemma": "matéssi, matéssiu",
+      "varianti": [],
+      "consultato": "2026-11-26"
+    },
+    "innantis": {
+      "lemma": "innàntis",
+      "varianti": [],
+      "consultato": "2026-11-26"
+    },
+    "pentzu": {
+      "lemma": "péntzu",
+      "varianti": [],
+      "consultato": "2026-11-26"
+    },
+    "mezus": {
+      "lemma": "mézus",
+      "varianti": [],
+      "consultato": "2026-11-26"
+    },
+    "cadira": {
+      "lemma": "cadíra",
+      "varianti": [],
+      "consultato": "2026-11-26"
+    },
+    "bixinau": {
+      "lemma": "bixinàu",
+      "varianti": [],
+      "consultato": "2026-11-26"
+    },
+    "prenu": {
+      "lemma": "prénu",
+      "varianti": [],
+      "consultato": "2026-11-26"
+    },
+    "ancora": {
+      "lemma": "ancòra, ancòras",
+      "varianti": [],
+      "consultato": "2026-11-26"
+    },
+    "iscusa": {
+      "lemma": "iscúsa",
+      "varianti": [],
+      "consultato": "2026-11-26"
+    },
+    "intesu": {
+      "lemma": "intésu",
+      "varianti": [],
+      "consultato": "2026-11-26"
+    },
+    "dìa": {
+      "lemma": "dí, día",
+      "varianti": [],
+      "consultato": "2026-11-26"
+    },
+    "armariu": {
+      "lemma": "armàriu",
+      "varianti": [],
+      "consultato": "2026-11-26"
+    },
+    "abertu": {
+      "lemma": "abértu",
+      "varianti": [],
+      "consultato": "2026-11-26"
+    },
+    "cursu": {
+      "lemma": "cúrsu",
+      "varianti": [],
+      "consultato": "2026-11-26"
+    },
+    "rete": {
+      "lemma": "rète",
+      "varianti": [],
+      "consultato": "2026-11-26"
+    },
+    "lughe": {
+      "lemma": "lúghe",
+      "varianti": [],
+      "consultato": "2026-11-26"
+    },
+    "miu": {
+      "lemma": "míu",
+      "varianti": [],
+      "consultato": "2026-11-26"
+    },
+    "tzilleri": {
+      "lemma": "tzilléri",
+      "varianti": [],
+      "consultato": "2026-11-26"
+    },
+    "costau": {
+      "lemma": "costàtu, costàu",
+      "varianti": [],
+      "consultato": "2026-11-26"
+    },
+    "pratu": {
+      "lemma": "pràtu",
+      "varianti": [],
+      "consultato": "2026-11-26"
+    },
+    "sesi": {
+      "lemma": "sèse, sèsi",
+      "varianti": [],
+      "consultato": "2026-11-26"
+    },
+    "mercau": {
+      "lemma": "mercàtu 1, mercàu",
+      "varianti": [],
+      "consultato": "2026-11-26"
+    },
+    "premiu": {
+      "lemma": "prémiu",
+      "varianti": [],
+      "consultato": "2026-11-26"
+    },
+    "andau": {
+      "lemma": "andhàu",
+      "varianti": [],
+      "consultato": "2026-11-26"
+    },
+    "minore": {
+      "lemma": "minòre",
+      "varianti": [],
+      "consultato": "2026-11-26"
+    },
+    "mia": {
+      "lemma": "mía",
+      "varianti": [],
+      "consultato": "2026-11-26"
+    },
+    "peus": {
+      "lemma": "péus",
+      "varianti": [],
+      "consultato": "2026-11-26"
+    },
+    "campagna": {
+      "lemma": "campàgna",
+      "varianti": [],
+      "consultato": "2026-11-26"
+    },
+    "pedra": {
+      "lemma": "pèdra",
+      "varianti": [],
+      "consultato": "2026-11-26"
+    },
+    "pudda": {
+      "lemma": "púdha",
+      "varianti": [],
+      "consultato": "2026-11-26"
+    },
+    "corte": {
+      "lemma": "còrte",
+      "varianti": [],
+      "consultato": "2026-11-26"
+    },
+    "cumpletu": {
+      "lemma": "cumplétu",
+      "varianti": [],
+      "consultato": "2026-11-26"
+    },
+    "tesu": {
+      "lemma": "tésu",
+      "varianti": [],
+      "consultato": "2026-11-26"
+    },
+    "sòlitu": {
+      "lemma": "sólitu",
+      "varianti": [],
+      "consultato": "2026-11-26"
+    },
+    "stau": {
+      "lemma": "stàu",
+      "varianti": [],
+      "consultato": "2026-11-26"
+    },
+    "bisu": {
+      "lemma": "bísu",
+      "varianti": [],
+      "consultato": "2026-11-26"
+    },
+    "traballu": {
+      "lemma": "trabàlliu, trabàllu",
+      "varianti": [],
+      "consultato": "2026-11-26"
+    },
+    "sciu": {
+      "lemma": "scíu",
+      "varianti": [],
+      "consultato": "2026-11-26"
     }
   },
   "grammatica": [
