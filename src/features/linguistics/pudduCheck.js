@@ -141,30 +141,38 @@ export const checkPudduForm = async (form, options = {}) => {
 
   // Il timeout vale per il fetch reale; i test che iniettano fetchImpl non
   // devono lasciare timer accesi, salvo timeoutMs esplicito.
+  // setTimeout (non AbortSignal.timeout) perché il suo timer è ref'd: in un
+  // test isolato l'event loop non deve chiudersi prima dell'abort.
   const timeoutMs = options.timeoutMs ?? (options.fetchImpl ? 0 : DEFAULT_TIMEOUT_MS)
-  const signal = options.signal || (timeoutMs > 0 ? AbortSignal.timeout(timeoutMs) : undefined)
+  const controller = timeoutMs > 0 && !options.signal ? new AbortController() : null
+  const timer = controller ? setTimeout(() => controller.abort(), timeoutMs) : null
+  const signal = options.signal || controller?.signal
 
-  let response
   try {
-    response = await fetchImpl(pudduUrl(clean), { method: 'POST', signal })
-  } catch (error) {
-    const message = error instanceof Error ? error.message : String(error)
-    return { form: clean, ...emptyPage('error', `rete: ${message}`) }
-  }
+    let response
+    try {
+      response = await fetchImpl(pudduUrl(clean), { method: 'POST', signal })
+    } catch (error) {
+      const message = error instanceof Error ? error.message : String(error)
+      return { form: clean, ...emptyPage('error', `rete: ${message}`) }
+    }
 
-  if (!response || response.ok !== true) {
-    return { form: clean, ...emptyPage('error', `HTTP ${response?.status ?? 'sconosciuto'}`) }
-  }
+    if (!response || response.ok !== true) {
+      return { form: clean, ...emptyPage('error', `HTTP ${response?.status ?? 'sconosciuto'}`) }
+    }
 
-  let html
-  try {
-    html = await response.text()
-  } catch (error) {
-    const message = error instanceof Error ? error.message : String(error)
-    return { form: clean, ...emptyPage('error', `lettura: ${message}`) }
-  }
+    let html
+    try {
+      html = await response.text()
+    } catch (error) {
+      const message = error instanceof Error ? error.message : String(error)
+      return { form: clean, ...emptyPage('error', `lettura: ${message}`) }
+    }
 
-  return { form: clean, ...parsePudduPage(html) }
+    return { form: clean, ...parsePudduPage(html) }
+  } finally {
+    if (timer) clearTimeout(timer)
+  }
 }
 
 /**
@@ -362,7 +370,7 @@ export const compareSnapshotLemmas = (snapshot, results) => {
   let matched = 0
 
   for (const result of Array.isArray(results) ? results : []) {
-    const form = typeof result?.form === 'string' ? result.form.trim() : ''
+    const form = String(result?.form || '').trim()
     if (!form) continue
     const entry = snapshot?.lemmi?.[form]
     if (!entry) continue

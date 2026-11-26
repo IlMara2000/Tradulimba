@@ -41,12 +41,13 @@ const printHelp = () => {
 Opzioni:
   -f, --file <percorso>  legge le forme da un file (una per riga, # commenta)
       --check            confronta i lemmi dello snapshot e non scrive
+                         (senza forme: tutti i lemmi dello snapshot)
       --update           aggiorna data/puddu-lemmi.json con le forme trovate
       --yes              non chiede conferma (solo con --update)
       --strict           esce con codice 1 se una forma è assente o non verificabile
   -h, --help             mostra questo messaggio
 
-Senza argomenti legge le forme da stdin. Per esempio:
+Senza argomenti (e senza --check) legge le forme da stdin. Per esempio:
   printf 'manèra\\nmatessi\\n' | npm run puddu:check
 `)
 }
@@ -114,16 +115,18 @@ if (inputs.length === 0 && !check && !process.stdin.isTTY) {
 // tutto l'input, invece di deduplicare di nuovo dopo.
 const forms = parseForms(inputs.join('\n'))
 const snapshot = check ? JSON.parse(readFileSync(SNAPSHOT, 'utf8')) : null
-
-const targets = check
-  ? (forms.length > 0
-      ? forms.filter((form) => Object.hasOwn(snapshot?.lemmi || {}, form))
-      : Object.keys(snapshot?.lemmi || {}))
-  : forms
+const lemmi = snapshot?.lemmi || {}
 
 if (check && forms.length > 0) {
-  const unknown = forms.filter((form) => !Object.hasOwn(snapshot?.lemmi || {}, form))
+  const unknown = forms.filter((form) => !Object.hasOwn(lemmi, form))
   if (unknown.length > 0) console.error(`Non sono nello snapshot: ${unknown.join(', ')}`)
+}
+
+let targets = forms
+if (check) {
+  targets = forms.length > 0
+    ? forms.filter((form) => Object.hasOwn(lemmi, form))
+    : Object.keys(lemmi)
 }
 
 if (targets.length === 0) {
