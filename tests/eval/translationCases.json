@@ -1,0 +1,74 @@
+[
+  {
+    "id": "ita-srd-1",
+    "source": "ita", "target": "srd",
+    "text": "Buongiorno, come stai?",
+    "reference": "Bonas dies, comente ses?",
+    "mustContain": ["Bonas", "comente"],
+    "mustNotContain": [],
+    "status": "reviewed"
+  },
+  {
+    "id": "srd-ita-2",
+    "source": "srd", "target": "ita",
+    "text": "Bonas dies, comente ses?",
+    "reference": "Buongiorno, come stai?",
+    "mustContain": ["Buongiorno", "come"],
+    "mustNotContain": [],
+    "status": "reviewed"
+  },
+  {
+    "id": "ita-srd-3",
+    "source": "ita", "target": "srd",
+    "text": "Quanto costa il biglietto per Cagliari?",
+    "reference": "Cantu costat su billete pro Casteddu?",
+    "mustContain": ["Casteddu"],
+    "mustNotContain": ["Cagliari"],
+    "status": "reviewed"
+  },
+  {
+    "id": "srd-ita-4",
+    "source": "srd", "target": "ita",
+    "text": "Cantu costat su billete pro Casteddu?",
+    "reference": "Quanto costa il biglietto per Cagliari?",
+    "mustContain": ["Cagliari"],
+    "mustNotContain": ["Casteddu"],
+    "status": "reviewed"
+  },
+  {
+    "id": "ita-srd-5",
+    "source": "ita", "target": "srd",
+    "text": "Il documento scade il 15 marzo 2026.",
+    "reference": "Su documentu iscadit su 15 de martzu de su 2026.",
+    "mustContain": ["15", "2026"],
+    "mustNotContain": [],
+    "status": "reviewed"
+  },
+  {
+    "id": "srd-ita-6",
+    "source": "srd", "target": "ita",
+    "text": "Bonas dies.\n\nComente ses?",
+    "reference": "Buongiorno.\n\nCome stai?",
+    "mustContain": ["Buongiorno", "Come"],
+    "mustNotContain": [],
+    "status": "reviewed"
+  },
+  {
+    "id": "ita-eng-7",
+    "source": "ita", "target": "eng",
+    "text": "La richiesta è stata approvata.",
+    "reference": "The request has been approved.",
+    "mustContain": ["request", "approved"],
+    "mustNotContain": [],
+    "status": "reviewed"
+  },
+  {
+    "id": "srd-eng-8",
+    "source": "srd", "target": "eng",
+    "text": "Bonas dies, comente ses?",
+    "reference": "Good morning, how are you?",
+    "mustContain": ["Good morning", "how are you"],
+    "mustNotContain": [],
+    "status": "reviewed"
+  }
+]
